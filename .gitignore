@@ -1,0 +1,5 @@
+# ignore extraneous python by products
+**/__pycache__
+
+*.txt
+*.png
