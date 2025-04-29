@@ -1,3 +1,4 @@
+
 import sys
 import argparse
 from pathlib import Path
@@ -18,25 +19,25 @@ def get_user_directory():
   return None
 
 def get_all_ssd_sim_directories():
-  directories = list(Path("/scratch").glob("*/nk7952/Re*/Mach*/Pm*/*"))
+  matching_directories = list(Path("/scratch").glob("*/nk7952/R*/Mach*/Pm*/*"))
   return sorted(
     directory.resolve()
-    for directory in directories
+    for directory in matching_directories
     if io_manager.does_directory_exist(directory) and ("anti" not in str(directory))
   )
 
 def is_ssd_sim(directory, raise_error=False):
-  all_directories = get_all_ssd_sim_directories()
-  result = directory in all_directories
+  all_ssd_directories = get_all_ssd_sim_directories()
+  result = directory in all_ssd_directories
   if not(result) and raise_error:
     raise ValueError(f"`{directory}` is not a valid SSD simulation directory.")
   return result
 
 def do_for_simulations(func):
   directory = get_user_directory()
-  all_directories = get_all_ssd_sim_directories()
+  all_ssd_directories = get_all_ssd_sim_directories()
   if not directory:
-    for directory in all_directories:
+    for directory in all_ssd_directories:
       func(directory)
   else: func(directory)
 
@@ -57,4 +58,4 @@ if __name__ == "__main__":
     print(f"Encountered error while writing to file: {e}")
   sys.exit(0)
 
-## end of script
+## end of module

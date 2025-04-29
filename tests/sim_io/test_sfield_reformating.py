@@ -5,9 +5,9 @@ import sys
 import time
 import h5py
 import numpy
-from ww_flash_sims import io_sim_data
 from jormi.ww_io import io_manager
 from jormi.ww_plots import plot_manager, add_annotations
+from ww_flash_sims.sim_io import read_grid_data
 
 
 ## ###############################################################
@@ -54,7 +54,7 @@ class TestFlashReformat:
 
   def run(self):
     fig, axs = plot_manager.create_figure(num_rows=3, num_cols=2, axis_shape=(5, 5))
-    self.grid_properties = io_sim_data.read_grid_properties(file_path)
+    self.grid_properties = read_grid_data.read_grid_properties(file_path)
     self.num_blocks = (
         self.grid_properties["num_blocks_x"],
         self.grid_properties["num_blocks_y"],
@@ -71,7 +71,7 @@ class TestFlashReformat:
     print(self.num_cells_per_block)
     print(f"Comparing execution times (after {self.num_repeats} repetitions)...")
     self.sfield_reformated_v1, avg_time_v1 = self._benchmark_and_plot("reference", axs[:,0], reformat_flash_sfield)
-    self.sfield_reformated_v2, avg_time_v2 = self._benchmark_and_plot("production", axs[:,1], io_sim_data._read_grid_data._reformat_flash_sfield)
+    self.sfield_reformated_v2, avg_time_v2 = self._benchmark_and_plot("production", axs[:,1], read_grid_data._reformat_flash_sfield)
     speedup_percent = avg_time_v1 / avg_time_v2
     improvement_factor = 100 * (avg_time_v1 - avg_time_v2) / avg_time_v1
     print(f"Production version is {improvement_factor:.2f}% faster ({speedup_percent:.2f}x speedup).")

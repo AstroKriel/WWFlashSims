@@ -1,5 +1,7 @@
 from pathlib import Path
 
+## TODO: add save to config file: need to add a sim_type param -> ssd_sim or anti_ssd_sim
+
 class SSDSimulation():
   ALIASES = {
     "N_res"         : "num_cells_per_box_length",
@@ -31,7 +33,7 @@ class SSDSimulation():
       box_normalised_forcing_wave_number : float = 2.0,
       forcing_fourier_profile            : str = "parabolic",
       forcing_wavenumber_width           : float = 1.0,
-      dumps_per_turnover_time            : int = 2,
+      dumps_per_turnover_time            : int = 1,
       num_turnover_times                 : float = 100.0,
       box_length                         : float = 1.0,
       sound_speed                        : float = 1.0,
