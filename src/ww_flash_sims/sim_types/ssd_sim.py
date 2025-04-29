@@ -72,9 +72,9 @@ class SSDSimulation():
     self.num_cells_per_block                = num_cells_per_block
 
   def compute_missing_params(self):
+    self._compute_grid_properties()
     self._compute_missing_init_conditions()
     self._compute_missing_plasma_numbers()
-    self._compute_grid_properties()
     self._check_all_params_are_defined()
     self._check_all_params_are_valid()
 
@@ -93,13 +93,14 @@ class SSDSimulation():
     max_var_name_len   = max(len(var_name) for var_name, _, _, _ in entries)
     max_alias_name_len = max(len(alias_name) for _, alias_name, _, _ in entries)
     max_value_len      = max(len(str(value)) for _, _, value, _ in entries)
-    print("SSD Simulation Properties:\n")
+    print("SSD Simulation Properties:")
+    print(" ")
     for var_name, alias_name, var_value, var_type in entries:
       var_str   = f"{var_name:<{max_var_name_len}}"
       alias_str = f"{alias_name:<{max_alias_name_len}}" if alias_name else " " * max_alias_name_len
       value_str = f"{str(var_value):>{max_value_len}}"
       print(f"\t- {var_str} {alias_str} = {value_str} [{var_type}]")
-
+    print(" ")
 
   @classmethod
   def _alias(cls, alias_name, var_name):
@@ -113,6 +114,17 @@ class SSDSimulation():
     for alias_name, var_name in cls.ALIASES.items():
       cls._alias(alias_name, var_name)
 
+  def _compute_grid_properties(self):
+    if   self.N_res in [ 576, 1152 ]: self.num_blocks = (96, 96, 72)
+    elif self.N_res in [ 144, 288 ]:  self.num_blocks = (36, 36, 48)
+    elif self.N_res in [ 36, 72 ]:    self.num_blocks = (12, 12, 18)
+    elif self.N_res in [ 18 ]:        self.num_blocks = (6, 6, 6)
+    else: raise ValueError(f"Simulation width box length resolution = `{self.N_res}` is not supported.")
+    self.num_cells_per_block = tuple(
+      int(self.N_res / num_blocks_in_dir)
+      for num_blocks_in_dir in self.num_blocks
+    )
+
   def _compute_missing_init_conditions(self):
     u_turb_0 = self.mach_0 / self.c_s
     ell_turb = self.ell_box / self.scaled_k_turb
@@ -122,8 +134,7 @@ class SSDSimulation():
 
   def _compute_missing_plasma_numbers(self):
     u_turb_0 = self.mach_0 / self.c_s
-    ## recall that k = 2 pi / ell, and so scaled_k_turb = k_turb ell_box / (2 pi) = ell_box / ell_turb
-    ell_turb = self.ell_box / self.scaled_k_turb
+    ell_turb = self.ell_box / self.scaled_k_turb # recall: scaled_k_turb = k_turb ell_box / (2 pi)
     if (self.Re_0 is not None) and (self.Pm_0 is not None):
       self.Re_0 = float(self.Re_0)
       self.Pm_0 = float(self.Pm_0)
@@ -138,25 +149,14 @@ class SSDSimulation():
       self.nu   = self.eta * self.Pm_0
     else: raise Exception(f"Insufficient plasma numbers provided: Re_0 = {self.Re_0:.2f}, Rm_0 = {self.Rm_0:.2f}, and Pm_0 = {self.Pm_0:.2f}.")
 
-  def _compute_grid_properties(self):
-    if   self.N_res in [ 576, 1152 ]: self.num_blocks = (96, 96, 72)
-    elif self.N_res in [ 144, 288 ]:  self.num_blocks = (36, 36, 48)
-    elif self.N_res in [ 36, 72 ]:    self.num_blocks = (12, 12, 18)
-    elif self.N_res in [ 18 ]:        self.num_blocks = (6, 6, 6)
-    else: raise ValueError(f"Simulation resolution = `{self.Nres:.d}` is not supported.")
-    self.num_cells_per_block = tuple(
-      int(self.N_res / num_blocks_in_dir)
-      for num_blocks_in_dir in self.num_blocks
-    )
-
-  def _check_all_params_are_valid(self):
-    if self.scaled_k_turb < 1.0: raise ValueError("Forcing mode should be smaller than the simulation box.")
-
   def _check_all_params_are_defined(self):
     undefined_vars = []
     for var_name, var_value in self.__dict__.items():
       if var_value is None: undefined_vars.append(var_name)
     if len(undefined_vars) > 0:
       raise ValueError(f"The following parameters have not been defined: {undefined_vars}")
+
+  def _check_all_params_are_valid(self):
+    if self.scaled_k_turb < 1.0: raise ValueError("Forcing mode should be smaller than the simulation box.")
 
 SSDSimulation._create_aliases()
