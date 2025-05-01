@@ -19,7 +19,7 @@ def get_user_directory():
   return None
 
 def get_all_ssd_sim_directories():
-  matching_directories = list(Path("/scratch").glob("*/nk7952/R*/Mach*/Pm*/*"))
+  matching_directories = sorted(Path("/scratch").glob("*/nk7952/R*/Mach*/Pm*/*"))
   return sorted(
     directory.resolve()
     for directory in matching_directories
@@ -41,7 +41,7 @@ def do_for_simulations(func):
       func(directory)
   else: func(directory)
 
-def _save_ssd_sim_directories():
+def save_ssd_sim_directories():
   script_directory = io_manager.get_caller_directory()
   file_name = "ssd_sim_directories.txt"
   file_path = io_manager.combine_file_path_parts([script_directory, file_name])
@@ -51,11 +51,5 @@ def _save_ssd_sim_directories():
       file_pointer.write(str(directory) + "\n")
   print("\nSaved:", file_path)
 
-if __name__ == "__main__":
-  try:
-    _save_ssd_sim_directories()
-  except Exception as e:
-    print(f"Encountered error while writing to file: {e}")
-  sys.exit(0)
 
 ## end of module
