@@ -34,22 +34,17 @@ class TestFlashReformat:
       self.grid_properties["num_cells_per_block_z"],
     )
     self.sfield_raw = self._load_field_data()
-    print(f"input has shape: {self.sfield_raw.shape}")
-    print(self.num_blocks)
-    print(self.num_cells_per_block)
-    print(" ")
-    print(f"comparing execution times (after {self.num_repeats} repetitions)...")
+    print(f"Comparing execution times (after {self.num_repeats} repetitions)...")
     reformat_flash_sfield_v1_with_force = partial(read_grid_data._reformat_flash_sfield_v1, force_use=True)
     reformat_flash_sfield_v1_with_force.__name__ = "read_grid_data._reformat_flash_sfield_v1"
     self.sfield_reformated_ref, avg_time_ref = self._benchmark_and_plot("reference", axs[:,0], reformat_flash_sfield_v1_with_force)
     self.sfield_reformated, avg_time = self._benchmark_and_plot("production", axs[:,1], read_grid_data._reformat_flash_sfield_v3)
-    print(" ")
-    self._print_array_info("reference", self.sfield_reformated_ref)
-    self._print_array_info("production", self.sfield_reformated)
     speedup_percent = avg_time_ref / avg_time
     improvement_factor = 100 * (avg_time_ref - avg_time) / avg_time_ref
-    print(f"production version is {improvement_factor:.2f}% faster ({speedup_percent:.2f}x speedup).")
-    print(f"output has shape: {self.sfield_reformated.shape}")
+    print(" ")
+    print(f"Input shape: {self.sfield_raw.shape}")
+    print(f"Output shape: {self.sfield_reformated.shape}")
+    print(f"Production version was {improvement_factor:.2f}% faster ({speedup_percent:.2f}x speedup).")
     print(" ")
     self._compare_outputs()
     self._adjust_figure(axs)
@@ -67,7 +62,7 @@ class TestFlashReformat:
     avg_time, std_time = self._get_average_execution_time(func)
     sfield_formatted = func(self.sfield_raw, self.num_blocks, self.num_cells_per_block)
     self._plot_slices(label, axs, sfield_formatted)
-    print(f"{label} reformatter average execution time: {avg_time:.6f} +/- {std_time:.6f} seconds")
+    print(f"\t- {label} reformatter average execution time: {avg_time:.6f} +/- {std_time:.6f} seconds")
     return sfield_formatted, avg_time
 
   def _get_average_execution_time(self, func):
@@ -92,12 +87,8 @@ class TestFlashReformat:
     add_annotations.add_text(ax=axs[1], x_pos=0.05, y_pos=0.05, label=label, y_alignment="bottom")
     add_annotations.add_text(ax=axs[2], x_pos=0.05, y_pos=0.05, label=label, y_alignment="bottom")
 
-  def _print_array_info(self, label, sfield_formatted):
-    print(f"properties of array produced by {label} formatter:")
-    print(sfield_formatted.flags)
-
   def _compare_outputs(self):
-    print("comparing outputs...")
+    print("Comparing outputs...")
     if numpy.allclose(self.sfield_reformated_ref, self.sfield_reformated):
       print("Test passed: Both reformated fields are identical.")
     else: print("Error: Something went wrong. The two reformated fields look different!")
