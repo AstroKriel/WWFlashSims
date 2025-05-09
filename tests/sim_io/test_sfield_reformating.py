@@ -5,46 +5,14 @@ import sys
 import time
 import h5py
 import numpy
+from functools import partial
 from jormi.ww_io import io_manager
 from jormi.ww_plots import plot_manager, add_annotations
 from ww_flash_sims.sim_io import read_grid_data
 
 
 ## ###############################################################
-## REFERENCE REFORMAT FUNCTION
-## ###############################################################
-def reformat_flash_sfield(
-    sfield              : numpy.ndarray,
-    num_blocks          : tuple[int, int, int],
-    num_cells_per_block : tuple[int, int, int],
-  ):
-  ## initialise dataset with Fortran-style coordinates ordering: [z, y, x]
-  sfield_sorted = numpy.zeros(
-    shape = (
-      num_cells_per_block[2] * num_blocks[2],
-      num_cells_per_block[1] * num_blocks[1],
-      num_cells_per_block[0] * num_blocks[0],
-    ),
-    dtype = numpy.float32,
-    order = "C" # use C memory layout (row-major) for consistency with python operation
-  )
-  ## place each block from the Fortran (column-major) output structure in its corresponding portion of the domain
-  block_index = 0
-  for index_block_z in range(num_blocks[2]):
-    for index_block_y in range(num_blocks[1]):
-      for index_block_x in range(num_blocks[0]):
-        sfield_sorted[
-          index_block_z * num_cells_per_block[2] : (index_block_z+1) * num_cells_per_block[2],
-          index_block_y * num_cells_per_block[1] : (index_block_y+1) * num_cells_per_block[1],
-          index_block_x * num_cells_per_block[0] : (index_block_x+1) * num_cells_per_block[0],
-        ] = sfield[block_index, :, :, :]
-        block_index += 1
-  ## reorder components from [z, y, x] to [x, y, z]
-  return numpy.transpose(sfield_sorted, (2, 1, 0))
-
-
-## ###############################################################
-## FLASH FIELD REFORMATTING CORRECTNESS TEST
+## TEST FLASH FIELD REFORMATTING CORRECTNESS
 ## ###############################################################
 class TestFlashReformat:
   def __init__(self, file_path, num_repeats=10):
@@ -56,26 +24,33 @@ class TestFlashReformat:
     fig, axs = plot_manager.create_figure(num_rows=3, num_cols=2, axis_shape=(5, 5))
     self.grid_properties = read_grid_data.read_grid_properties(file_path)
     self.num_blocks = (
-        self.grid_properties["num_blocks_x"],
-        self.grid_properties["num_blocks_y"],
-        self.grid_properties["num_blocks_z"],
+      self.grid_properties["num_blocks_x"],
+      self.grid_properties["num_blocks_y"],
+      self.grid_properties["num_blocks_z"],
     )
     self.num_cells_per_block = (
-        self.grid_properties["num_cells_per_block_x"],
-        self.grid_properties["num_cells_per_block_y"],
-        self.grid_properties["num_cells_per_block_z"],
+      self.grid_properties["num_cells_per_block_x"],
+      self.grid_properties["num_cells_per_block_y"],
+      self.grid_properties["num_cells_per_block_z"],
     )
     self.sfield_raw = self._load_field_data()
-    print(f"Input has shape: {self.sfield_raw.shape}")
+    print(f"input has shape: {self.sfield_raw.shape}")
     print(self.num_blocks)
     print(self.num_cells_per_block)
-    print(f"Comparing execution times (after {self.num_repeats} repetitions)...")
-    self.sfield_reformated_v1, avg_time_v1 = self._benchmark_and_plot("reference", axs[:,0], reformat_flash_sfield)
-    self.sfield_reformated_v2, avg_time_v2 = self._benchmark_and_plot("production", axs[:,1], read_grid_data._reformat_flash_sfield)
-    speedup_percent = avg_time_v1 / avg_time_v2
-    improvement_factor = 100 * (avg_time_v1 - avg_time_v2) / avg_time_v1
-    print(f"Production version is {improvement_factor:.2f}% faster ({speedup_percent:.2f}x speedup).")
-    print(f"Output has shape: {self.sfield_reformated_v2.shape}")
+    print(" ")
+    print(f"comparing execution times (after {self.num_repeats} repetitions)...")
+    reformat_flash_sfield_v1_with_force = partial(read_grid_data._reformat_flash_sfield_v1, force_use=True)
+    reformat_flash_sfield_v1_with_force.__name__ = "read_grid_data._reformat_flash_sfield_v1"
+    self.sfield_reformated_ref, avg_time_ref = self._benchmark_and_plot("reference", axs[:,0], reformat_flash_sfield_v1_with_force)
+    self.sfield_reformated, avg_time = self._benchmark_and_plot("production", axs[:,1], read_grid_data._reformat_flash_sfield_v3)
+    print(" ")
+    self._print_array_info("reference", self.sfield_reformated_ref)
+    self._print_array_info("production", self.sfield_reformated)
+    speedup_percent = avg_time_ref / avg_time
+    improvement_factor = 100 * (avg_time_ref - avg_time) / avg_time_ref
+    print(f"production version is {improvement_factor:.2f}% faster ({speedup_percent:.2f}x speedup).")
+    print(f"output has shape: {self.sfield_reformated.shape}")
+    print(" ")
     self._compare_outputs()
     self._adjust_figure(axs)
     script_directory = io_manager.get_caller_directory()
@@ -84,15 +59,15 @@ class TestFlashReformat:
     plot_manager.save_figure(fig, fig_file_path)
 
   def _load_field_data(self):
-    with h5py.File(self.file_path, "r") as h5file:
-      sfield_raw = numpy.array(h5file["dens"])
-    return numpy.log10(sfield_raw)
+    with h5py.File(self.file_path, "r") as hdf5_file:
+      sfield_raw = numpy.array(hdf5_file["dens"])
+    return sfield_raw
 
   def _benchmark_and_plot(self, label, axs, func):
     avg_time, std_time = self._get_average_execution_time(func)
     sfield_formatted = func(self.sfield_raw, self.num_blocks, self.num_cells_per_block)
     self._plot_slices(label, axs, sfield_formatted)
-    print(f"average {label}.{func.__name__}() execution time: {avg_time:.6f} +/- {std_time:.6f} seconds")
+    print(f"{label} reformatter average execution time: {avg_time:.6f} +/- {std_time:.6f} seconds")
     return sfield_formatted, avg_time
 
   def _get_average_execution_time(self, func):
@@ -104,9 +79,9 @@ class TestFlashReformat:
     return numpy.median(times), numpy.std(times)
 
   def _plot_slices(self, label, axs, sfield_formatted):
-    slice_index_x = sfield_formatted.shape[0]//2
-    slice_index_y = sfield_formatted.shape[1]//2
-    slice_index_z = sfield_formatted.shape[2]//2
+    slice_index_x = sfield_formatted.shape[0] // 2
+    slice_index_y = sfield_formatted.shape[1] // 2
+    slice_index_z = sfield_formatted.shape[2] // 2
     axs[0].imshow(sfield_formatted[slice_index_x, :, :], cmap="viridis")
     axs[1].imshow(sfield_formatted[:, slice_index_y, :], cmap="viridis")
     axs[2].imshow(sfield_formatted[:, :, slice_index_z], cmap="viridis")
@@ -117,11 +92,16 @@ class TestFlashReformat:
     add_annotations.add_text(ax=axs[1], x_pos=0.05, y_pos=0.05, label=label, y_alignment="bottom")
     add_annotations.add_text(ax=axs[2], x_pos=0.05, y_pos=0.05, label=label, y_alignment="bottom")
 
+  def _print_array_info(self, label, sfield_formatted):
+    print(f"properties of array produced by {label} formatter:")
+    print(sfield_formatted.flags)
+
   def _compare_outputs(self):
-    print("\nComparing outputs...")
-    if numpy.allclose(self.sfield_reformated_v1, self.sfield_reformated_v2):
+    print("comparing outputs...")
+    if numpy.allclose(self.sfield_reformated_ref, self.sfield_reformated):
       print("Test passed: Both reformated fields are identical.")
     else: print("Error: Something went wrong. The two reformated fields look different!")
+    print(" ")
 
   def _adjust_figure(self, axs):
     for row in axs:
