@@ -20,7 +20,7 @@ def main():
   # hdf5_file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/288/plt/Turb_hdf5_plt_cnt_0069"
   hdf5_file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/576/plt/Turb_hdf5_plt_cnt_0069"
   # hdf5_file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/1152/plt/Turb_hdf5_plt_cnt_0069"
-  parser = argparse.ArgumentParser(description="FLASH HDF5 reformatting cache test")
+  parser = argparse.ArgumentParser(description="Script to evaluate the cache-performance of different FLASH field reformatters.")
   parser.add_argument("-m", "--method", required=True, type=str, choices=["v1", "v2", "v3"], help="Choose from: reference (v1 or v2) or production (v3) reformatters.")
   parser.add_argument("-r", "--repeat", required=False, type=int, default=5, help="Number of repeats for timing (default: 5)")
   args = parser.parse_args()
