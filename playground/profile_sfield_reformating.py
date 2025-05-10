@@ -1,19 +1,28 @@
-import sys
+## ###############################################################
+## DEPENDANCIES
+## ###############################################################
 import time
 import h5py
 import numpy
 import argparse
 from functools import partial
 from jormi.ww_io import io_manager
-from jormi.ww_data import compute_stats
 from jormi.ww_plots import plot_manager, add_annotations
 from ww_flash_sims.sim_io import read_grid_data
 
+
+## ###############################################################
+## HELPER FUNCTION
+## ###############################################################
 def print_elapsed_time_stats(reformat_times):
   print(f"\t- min: {numpy.min(reformat_times):.3f} seconds")
   print(f"\t- ave: {numpy.median(reformat_times):.3f} +/- {numpy.std(reformat_times):.3f} seconds")
   print(f"\t- max: {numpy.max(reformat_times):.3f} seconds")
 
+
+## ###############################################################
+## ROUTINE
+## ###############################################################
 class FlashReformatProfiler:
   VALID_REFORMATTERS = {
     "v1": partial(read_grid_data._reformat_flash_sfield_v1, force_use=True),
@@ -115,10 +124,12 @@ class FlashReformatProfiler:
     output_path = io_manager.combine_file_path_parts([ script_dir, filename ])
     plot_manager.save_figure(fig, output_path)
 
+
+## ###############################################################
+## SCRIPT ENTRY POINT
+## ###############################################################
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(
-    description = "Profile FLASH field reformatting performance and generate diagnostics"
-  )
+  parser = argparse.ArgumentParser(description="Profile FLASH field reformatting performance and generate diagnostics")
   parser.add_argument("-version", required=True, choices=["v1", "v2", "v3"], help="Choose one of the reformatter versions to test")
   parser.add_argument("-reformat_repeats", type=int, default=5, help="Number of times to run the reformatting function")
   parser.add_argument("-postprocess_repeats", type=int, default=0, help="Number of times to run postprocessing steps like gradients and FFTs")
@@ -136,7 +147,6 @@ if __name__ == "__main__":
     make_plots          = args.plot,
   )
   profiler.run()
-  sys.exit(0)
 
 
-## end of script
+## END OF SCRIPT
