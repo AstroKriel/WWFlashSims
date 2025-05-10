@@ -1,108 +1,142 @@
-## ###############################################################
-## DEPENDENCIES
-## ###############################################################
-import h5py
+import sys
 import time
+import h5py
 import numpy
 import argparse
+from functools import partial
 from jormi.ww_io import io_manager
 from jormi.ww_data import compute_stats
 from jormi.ww_plots import plot_manager, add_annotations
 from ww_flash_sims.sim_io import read_grid_data
 
+def print_elapsed_time_stats(reformat_times):
+  print(f"\t- min: {numpy.min(reformat_times):.3f} seconds")
+  print(f"\t- ave: {numpy.median(reformat_times):.3f} +/- {numpy.std(reformat_times):.3f} seconds")
+  print(f"\t- max: {numpy.max(reformat_times):.3f} seconds")
 
-## ###############################################################
-## TEST FLASH FIELD REFORMATTING CORRECTNESS
-## ###############################################################
-def main():
-  ## run with: `perf stat -e cache-misses` + `uv run `
-  # hdf5_file_path = "/scratch/jh2/nk7952/Re500/Mach0.8/Pm1/144/plt/Turb_hdf5_plt_cnt_0055"
-  # hdf5_file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/288/plt/Turb_hdf5_plt_cnt_0069"
-  hdf5_file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/576/plt/Turb_hdf5_plt_cnt_0069"
-  # hdf5_file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/1152/plt/Turb_hdf5_plt_cnt_0069"
-  parser = argparse.ArgumentParser(description="Script to evaluate the cache-performance of different FLASH field reformatters.")
-  parser.add_argument("-m", "--method", required=True, type=str, choices=["v1", "v2", "v3"], help="Choose from: reference (v1 or v2) or production (v3) reformatters.")
-  parser.add_argument("-r", "--repeat", required=False, type=int, default=5, help="Number of repeats for timing (default: 5)")
-  args = parser.parse_args()
-  method = args.method
-  num_repeats = args.repeat
-  grid_props = read_grid_data.read_grid_properties(hdf5_file_path)
-  num_blocks = (
-    grid_props["num_blocks_x"],
-    grid_props["num_blocks_y"],
-    grid_props["num_blocks_z"],
-  )
-  num_cells_per_block = (
-    grid_props["num_cells_per_block_x"],
-    grid_props["num_cells_per_block_y"],
-    grid_props["num_cells_per_block_z"],
-  )
-  with h5py.File(hdf5_file_path, "r") as hdf5_file:
-    sfield_raw = numpy.array(hdf5_file["dens"])
-  if method == "v1":
-    label = "reference"
-    reformatter = read_grid_data._reformat_flash_sfield_v1
-  elif method == "v2":
-    label = "reference"
-    reformatter = read_grid_data._reformat_flash_sfield_v2
-  elif method == "v3":
-    label = "production"
-    reformatter = read_grid_data._reformat_flash_sfield_v3
-  elapsed_times = []
-  for _ in range(num_repeats):
-    start_time = time.time()
-    sfield_formatted = reformatter(sfield_raw, num_blocks, num_cells_per_block)
-    elapsed_time = time.time() - start_time
-    elapsed_times.append(elapsed_time)
-  min_time = numpy.min(elapsed_times)
-  ave_time = numpy.median(elapsed_times)
-  std_time = numpy.std(elapsed_times)
-  max_time = numpy.max(elapsed_times)
-  print(f"Reformatted using the {label} ({method}) method:")
-  print(f"\t- input shape: {sfield_raw.shape}")
-  print(f"\t- output shape: {sfield_formatted.shape}")
-  print(f"\t- min execution time: {min_time:.3f} seconds")
-  print(f"\t- ave execution time: {ave_time:.3f} +/- {std_time:.3f} seconds (after {num_repeats} repeats)")
-  print(f"\t- max execution time: {max_time:.3f} seconds")
-  print(" ")
-  print("Output array properties:")
-  print(sfield_formatted.flags)
-  bin_centers, estimated_pdf = compute_stats.estimate_pdf(values=elapsed_times, num_bins=10)
-  fig, ax = plot_manager.create_figure()
-  ax.step(bin_centers, estimated_pdf, where="mid", color="black", marker="o", ms=5, ls="-", lw=1)
-  add_annotations.add_text(
-    ax          = ax,
-    x_pos       = 0.95,
-    y_pos       = 0.95,
-    label       = f"after {num_repeats} repeats",
-    x_alignment = "right",
-    y_alignment = "top",
-  )
-  add_annotations.add_text(
-    ax          = ax,
-    x_pos       = 0.95,
-    y_pos       = 0.85,
-    label       = f"input shape: {sfield_raw.shape}",
-    x_alignment = "right",
-    y_alignment = "top",
-  )
-  add_annotations.add_text(
-    ax          = ax,
-    x_pos       = 0.95,
-    y_pos       = 0.75,
-    label       = f"output shape: {sfield_formatted.shape}",
-    x_alignment = "right",
-    y_alignment = "top",
-  )
-  ax.set_xlabel(r"execution times [seconds]")
-  ax.set_ylabel(r"$p$(times)")
-  script_directory = io_manager.get_caller_directory()
-  fig_name = f"execution_times_reformator_{method}.png"
-  fig_file_path = io_manager.combine_file_path_parts([ script_directory, fig_name ])
-  plot_manager.save_figure(fig, fig_file_path)
+class FlashReformatProfiler:
+  VALID_REFORMATTERS = {
+    "v1": partial(read_grid_data._reformat_flash_sfield_v1, force_use=True),
+    "v2": partial(read_grid_data._reformat_flash_sfield_v2, force_use=True),
+    "v3": read_grid_data._reformat_flash_sfield_v3
+  }
+
+  def __init__(self, *, file_path, version, reformat_repeats, postprocess_repeats, make_plots):
+    io_manager.does_file_exist(file_path=file_path, raise_error=True)
+    self.file_path           = file_path
+    self.version             = version
+    self.reformat_repeats    = reformat_repeats
+    self.postprocess_repeats = postprocess_repeats
+    self.make_plots          = make_plots
+    if self.version not in self.VALID_REFORMATTERS:
+      raise ValueError(f"Invalid version {self.version}")
+
+  def run(self):
+    self._load_data()
+    self.reformat_func = self.VALID_REFORMATTERS[self.version]
+    reformatted_sfield = self._benchmark_reformatter()
+    self._print_stats(reformatted_sfield)
+    if self.postprocess_repeats > 0: self._benchmark_postprocess(reformatted_sfield)
+    if self.make_plots: self._plot_slices(reformatted_sfield)
+
+  def _load_data(self):
+    grid_props = read_grid_data.read_grid_properties(self.file_path)
+    self.num_blocks = (
+      grid_props["num_blocks_x"],
+      grid_props["num_blocks_y"],
+      grid_props["num_blocks_z"],
+    )
+    self.num_cells_per_block = (
+      grid_props["num_cells_per_block_x"],
+      grid_props["num_cells_per_block_y"],
+      grid_props["num_cells_per_block_z"],
+    )
+    with h5py.File(self.file_path, "r") as hdf5_file:
+      self.sfield_raw = numpy.array(hdf5_file["dens"])
+
+  def _benchmark_reformatter(self):
+    reformat_times = []
+    reformatted_sfield = None
+    for _ in range(self.reformat_repeats):
+      start_time = time.time()
+      reformatted_sfield = self.reformat_func(self.sfield_raw, self.num_blocks, self.num_cells_per_block)
+      reformat_times.append(time.time() - start_time)
+    print(f"Reformat stats (after {self.reformat_repeats} repeats):")
+    print_elapsed_time_stats(reformat_times)
+    return reformatted_sfield
+
+  def _print_stats(self, reformatted_sfield):
+    print("Array properties:")
+    print(f"\t- Input shape: {self.sfield_raw.shape}")
+    print(f"\t- Output shape: {reformatted_sfield.shape}")
+    print(f"\t- strides: {reformatted_sfield.strides}")
+    print(f"\t- dtype: {reformatted_sfield.dtype}")
+    for line in str(reformatted_sfield.flags).splitlines():
+      formatted_line = line.strip().replace(" :", ":")
+      print(f"\t- {formatted_line}")
+
+  def _benchmark_postprocess(self, reformatted_sfield):
+    postprocess_times = []
+    for _ in range(self.postprocess_repeats):
+      start = time.time()
+      numpy.gradient(reformatted_sfield)
+      postprocess_times.append(time.time() - start)
+    print(f"Postprocess stats (after {self.postprocess_repeats} repeats):")
+    print_elapsed_time_stats(postprocess_times)
+
+  def _plot_slices(self, reformatted_sfield):
+    fig, axs = plot_manager.create_figure(num_rows=3, share_x=True)
+    sfield_slices = [
+      reformatted_sfield[reformatted_sfield.shape[0] // 2, :, :],
+      reformatted_sfield[:, reformatted_sfield.shape[1] // 2, :],
+      reformatted_sfield[:, :, reformatted_sfield.shape[2] // 2],
+    ]
+    labels = [
+      r"$(x=L/2, y, z)$",
+      r"$(x, y=L/2, z)$",
+      r"$(x, y, z=L/2)$",
+    ]
+    for ax, sfield_slice, label in zip(axs, sfield_slices, labels):
+      ax.imshow(sfield_slice, cmap="viridis")
+      add_annotations.add_text(
+        ax          = ax,
+        x_pos       = 0.05,
+        y_pos       = 0.95,
+        label       = label,
+        x_alignment = "left",
+        y_alignment = "top",
+      )
+      ax.set_xticks([])
+      ax.set_yticks([])
+    self._save_figure(fig, f"slices_{self.version}.png")
+
+  def _save_figure(self, fig, filename):
+    script_dir  = io_manager.get_caller_directory()
+    output_path = io_manager.combine_file_path_parts([ script_dir, filename ])
+    plot_manager.save_figure(fig, output_path)
 
 if __name__ == "__main__":
-  main()
+  parser = argparse.ArgumentParser(
+    description = "Profile FLASH field reformatting performance and generate diagnostics"
+  )
+  parser.add_argument("-version", required=True, choices=["v1", "v2", "v3"], help="Choose one of the reformatter versions to test")
+  parser.add_argument("-reformat_repeats", type=int, default=5, help="Number of times to run the reformatting function")
+  parser.add_argument("-postprocess_repeats", type=int, default=0, help="Number of times to run postprocessing steps like gradients and FFTs")
+  parser.add_argument("-plot", action="store_true", help="Plot field slices")
+  args = parser.parse_args()
+  # file_path = "/scratch/jh2/nk7952/Re500/Mach0.8/Pm1/144/plt/Turb_hdf5_plt_cnt_0069"
+  file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/288/plt/Turb_hdf5_plt_cnt_0069"
+  # file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/576/plt/Turb_hdf5_plt_cnt_0069"
+  # file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/1152/plt/Turb_hdf5_plt_cnt_0069"
+  profiler = FlashReformatProfiler(
+    file_path           = file_path,
+    version             = args.version,
+    reformat_repeats    = args.reformat_repeats,
+    postprocess_repeats = args.postprocess_repeats,
+    make_plots          = args.plot,
+  )
+  profiler.run()
+  sys.exit(0)
 
 
-## END OF SCRIPT
+## end of script

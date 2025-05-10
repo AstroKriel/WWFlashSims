@@ -118,14 +118,14 @@ def _reformat_flash_sfield_v2(
   if not force_use:
     print("Warning: depreciated FLASH reformatter was called. Using the up-to-date and optimised version instead.")
     return _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block)
-  ## see version 3 for details
-  sfield = sfield.reshape(
+  ## see version 3 for an explanation
+  sfield_sorted = sfield.reshape(
     num_blocks[2], num_blocks[1], num_blocks[0],
     num_cells_per_block[2], num_cells_per_block[1], num_cells_per_block[0]
   )
   ## warning: this layout is not memory-contiguous along the merge axes; leads to inefficient cache usage during the reshape
-  sfield = numpy.transpose(sfield, (2, 5, 1, 4, 0, 3))
-  sfield_sorted = sfield.reshape(
+  sfield_sorted = numpy.transpose(sfield_sorted, (2, 5, 1, 4, 0, 3))
+  sfield_sorted = sfield_sorted.reshape(
     num_blocks[0] * num_cells_per_block[0],
     num_blocks[1] * num_cells_per_block[1],
     num_blocks[2] * num_cells_per_block[2],
@@ -139,7 +139,7 @@ def _reformat_flash_sfield_v3(
   ):
   """
   Highly optimised FLASH scalar-field reformatter:
-  Vectorised, cache-efficient operations that preserve memory contiguity.
+  Vectorised, cache- and memory-efficient (intermediate arrays are views, only the final output is copied).
   """
   ## separate the unified block structure into individual block components
   ## reshape from flat: [num_blocks, z, y, x]
@@ -158,7 +158,10 @@ def _reformat_flash_sfield_v3(
     num_blocks[0] * num_cells_per_block[0],
   )
   ## convert axis ordering from fortran-style [z, y, x] to C-style [x, y, z]
-  return sfield_sorted.transpose((2, 1, 0))
+  sfield_sorted = sfield_sorted.transpose((2, 1, 0))
+  return sfield_sorted
+  # ## ensure the result is c-contiguous and owns its data
+  # return numpy.ascontiguousarray(sfield_sorted)
 
 def read_flash_field(
     file_path       : str,
