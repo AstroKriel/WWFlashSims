@@ -27,6 +27,7 @@ class SSDSimulation():
 
   def __init__(
       self,
+      *,
       directory                          : str | Path,
       num_cells_per_box_length           : float,
       init_mach_number                   : float,
@@ -47,6 +48,7 @@ class SSDSimulation():
       forcing_tuned                      : bool = False,
       num_blocks                         : tuple[int, int, int] | None = None,
       num_cells_per_block                : tuple[int, int, int] | None = None,
+      **unused_args
     ):
     self.directory                          = Path(directory).absolute()
     self.num_cells_per_box_length           = num_cells_per_box_length
@@ -73,13 +75,15 @@ class SSDSimulation():
     self.forcing_tuned                      = forcing_tuned
     self.num_blocks                         = num_blocks
     self.num_cells_per_block                = num_cells_per_block
+    self._compute_missing_params()
+    self._validate_params()
 
-  def compute_missing_params(self):
+  def _compute_missing_params(self):
     self._compute_grid_properties()
     self._compute_missing_init_conditions()
     self._compute_missing_plasma_numbers()
 
-  def validate_params(self):
+  def _validate_params(self):
     self._check_all_params_are_defined()
     self._check_all_params_are_valid()
 
@@ -134,7 +138,6 @@ class SSDSimulation():
     )
     config_dict["directory"] = directory
     config_class = cls._from_dict(config_dict)
-    config_class.compute_missing_params()
     return config_class
 
   def print_sim_params(self):
