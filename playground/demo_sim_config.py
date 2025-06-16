@@ -2,8 +2,9 @@ from ww_flash_sims.sim_types import ssd_sim
 
 
 def main():
-  ssd_sim_obj = ssd_sim.SSDSimulation(
-    directory                          = "/bla/blah/bleh/",
+  tmp_directory = "/scratch/jh2/nk7952/Re1000/Mach0.2/Pm5/Nres144"
+  sim_1_obj = ssd_sim.SSDSimulation(
+    directory                          = tmp_directory,
     num_cells_per_box_length           = 576,
     init_mach_number                   = 0.5,
     init_energy_ratio                  = 1e-10,
@@ -12,8 +13,12 @@ def main():
     init_hydrodynamic_reynolds_number  = 1000,
     init_magnetic_prandtl_number       = 5,
   )
-  ssd_sim_obj.compute_missing_params()
-  ssd_sim_obj.print_sim_params()
+  sim_1_obj.compute_missing_params()
+  sim_1_obj.save_to_json_file()
+  sim_1_obj.print_sim_params()
+  sim_2_obj = SSDSimulation.read_from_json(directory=tmp_directory)
+  sim_2_obj.print_sim_params()
+
 
 if __name__ == "__main__":
   main()
