@@ -1,7 +1,18 @@
+## START OF MODULE
+
+
+## ###############################################################
+## DEPENDENCIES
+## ###############################################################
+
 import json
 from pathlib import Path
 from jormi.ww_io import io_manager, json_files
 
+
+## ###############################################################
+## OPERATOR CLASS
+## ###############################################################
 
 class SSDSimulation():
   ALIASES = {
@@ -221,4 +232,12 @@ class SSDSimulation():
   def _check_all_params_are_valid(self):
     if self.scaled_k_turb < 1.0: raise ValueError("Forcing mode should be smaller than the simulation box.")
 
+
+## ###############################################################
+## CREATE ALIASES
+## ###############################################################
+
 SSDSimulation._create_aliases()
+
+
+## END OF MODULE
