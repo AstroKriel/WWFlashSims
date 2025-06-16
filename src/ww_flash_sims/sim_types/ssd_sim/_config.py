@@ -1,6 +1,7 @@
+import json
 from pathlib import Path
+from jormi.ww_io import io_manager, json_files
 
-## TODO: add save to config file: need to add a sim_type param -> ssd_sim or anti_ssd_sim
 
 class SSDSimulation():
   ALIASES = {
@@ -77,20 +78,76 @@ class SSDSimulation():
     self._compute_grid_properties()
     self._compute_missing_init_conditions()
     self._compute_missing_plasma_numbers()
+
+  def validate_params(self):
     self._check_all_params_are_defined()
     self._check_all_params_are_valid()
+
+  def _to_dict(self):
+    result = {}
+    for key, value in self.__dict__.items():
+      if key == "directory":
+        continue
+      elif isinstance(value, Path):
+        result[key] = str(value)
+      elif isinstance(value, tuple):
+        result[key] = list(value)
+      else: result[key] = value
+    return result
+
+  @classmethod
+  def _from_dict(cls, config):
+    if ("num_blocks" in config) and (config["num_blocks"] is not None):
+      config["num_blocks"] = tuple(config["num_blocks"])
+    if ("num_cells_per_block" in config) and (config["num_cells_per_block"] is not None):
+      config["num_cells_per_block"] = tuple(config["num_cells_per_block"])
+    return cls(**config)
+
+  def save_to_json_file(
+      self,
+      verbose   : bool = True
+    ):
+    file_path = io_manager.resolve_file_path(
+      directory = self.directory,
+      file_name = "sim_config.json"
+    )
+    json_files.save_dict_to_json_file(
+      file_path  = file_path,
+      input_dict = self._to_dict(),
+      overwrite  = True,
+      verbose    = verbose
+    )
+
+  @classmethod
+  def read_from_json_file(
+      cls,
+      directory : str | Path,
+      verbose   : bool = True
+    ):
+    file_path = io_manager.resolve_file_path(
+      directory = directory,
+      file_name = "sim_config.json"
+    )
+    config_dict = json_files.read_json_file_into_dict(
+      file_path = file_path,
+      verbose   = verbose
+    )
+    config_dict["directory"] = directory
+    config_class = cls._from_dict(config_dict)
+    config_class.compute_missing_params()
+    return config_class
 
   def print_sim_params(self):
     reverse_aliases = {value: key for key, value in self.ALIASES.items()}
     entries = []
     for var_name, var_value in self.__dict__.items():
-        alias_name = reverse_aliases.get(var_name, "")
-        entries.append((
-          f"`{var_name}`",
-          f"(alias: `{alias_name}`)" if alias_name else "",
-          var_value,
-          type(var_value).__name__
-        ))
+      alias_name = reverse_aliases.get(var_name, "")
+      entries.append((
+        f"`{var_name}`",
+        f"(alias: `{alias_name}`)" if alias_name else "",
+        var_value,
+        type(var_value).__name__
+      ))
     entries.sort(key=lambda entry: entry[0])
     max_var_name_len   = max(len(var_name) for var_name, _, _, _ in entries)
     max_alias_name_len = max(len(alias_name) for _, alias_name, _, _ in entries)
