@@ -129,11 +129,11 @@ class FlashReformatProfiler:
 ## SCRIPT ENTRY POINT
 ## ###############################################################
 if __name__ == "__main__":
-  parser = argparse.ArgumentParser(description="Profile FLASH field reformatting performance and generate diagnostics")
-  parser.add_argument("-version", required=True, choices=["v1", "v2", "v3"], help="Choose one of the reformatter versions to test")
-  parser.add_argument("-reformat_repeats", type=int, default=5, help="Number of times to run the reformatting function")
-  parser.add_argument("-postprocess_repeats", type=int, default=0, help="Number of times to run postprocessing steps like gradients and FFTs")
-  parser.add_argument("-plot", action="store_true", help="Plot field slices")
+  parser = argparse.ArgumentParser(description="Profile FLASH field reformatting performance and generate diagnostics.")
+  parser.add_argument("-version", required=True, choices=["v1", "v2", "v3"], help="Choose a version of the reformatter to test (v3 is the most recent).")
+  parser.add_argument("-reformat_repeats", type=int, default=5, help="Number of times to run the reformatting function.")
+  parser.add_argument("-postprocess_repeats", type=int, default=0, help="Number of times to run postprocessing steps like gradients and FFTs.")
+  parser.add_argument("-plot", action="store_true", help="Plot field slices.")
   args = parser.parse_args()
   # file_path = "/scratch/jh2/nk7952/Re500/Mach0.8/Pm1/144/plt/Turb_hdf5_plt_cnt_0069"
   file_path = "/scratch/ek9/nk7952/Re1500/Mach0.8/Pm1/288/plt/Turb_hdf5_plt_cnt_0069"

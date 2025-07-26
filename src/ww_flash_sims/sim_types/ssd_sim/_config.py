@@ -46,6 +46,7 @@ class SSDSimulation():
       box_normalised_forcing_wave_number : float = 2.0,
       forcing_fourier_profile            : str = "parabolic",
       forcing_wavenumber_width           : float = 1.0,
+      forcing_random_seed                : int = 655321,
       dumps_per_turnover_time            : int = 1,
       num_turnover_times                 : float = 100.0,
       box_length                         : float = 1.0,
@@ -70,6 +71,7 @@ class SSDSimulation():
     self.box_normalised_forcing_wave_number = box_normalised_forcing_wave_number
     self.forcing_fourier_profile            = forcing_fourier_profile
     self.forcing_wavenumber_width           = forcing_wavenumber_width
+    self.forcing_random_seed                = forcing_random_seed
     self.init_turnover_time                 = None
     self.dumps_per_turnover_time            = dumps_per_turnover_time
     self.num_turnover_times                 = num_turnover_times
@@ -101,13 +103,9 @@ class SSDSimulation():
   def _to_dict(self):
     result = {}
     for key, value in self.__dict__.items():
-      if key == "directory":
-        continue
-      elif isinstance(value, Path):
-        result[key] = str(value)
-      elif isinstance(value, tuple):
-        result[key] = list(value)
-      else: result[key] = value
+      if   isinstance(value, Path):  result[key] = str(value)
+      elif isinstance(value, tuple): result[key] = list(value)
+      else:                          result[key] = value
     return result
 
   @classmethod
@@ -147,9 +145,7 @@ class SSDSimulation():
       file_path = file_path,
       verbose   = verbose
     )
-    config_dict["directory"] = directory
-    config_class = cls._from_dict(config_dict)
-    return config_class
+    return cls._from_dict(config_dict)
 
   def print_sim_params(self):
     reverse_aliases = {value: key for key, value in self.ALIASES.items()}
@@ -230,7 +226,9 @@ class SSDSimulation():
       raise ValueError(f"The following parameters have not been defined: {undefined_vars}")
 
   def _check_all_params_are_valid(self):
-    if self.scaled_k_turb < 1.0: raise ValueError("Forcing mode should be smaller than the simulation box.")
+    if self.scaled_k_turb < 1.0: raise ValueError("Forcing mode should be smaller than the simulation box; `box_normalised_forcing_wave_number` > 1.")
+    if not isinstance(self.dumps_per_turnover_time, int): raise TypeError("`dumps_per_turnover_time` must be an integer.")
+    elif self.dumps_per_turnover_time < 0: raise ValueError("`dumps_per_turnover_time` must be non-negative.")
 
 
 ## ###############################################################
