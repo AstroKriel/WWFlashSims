@@ -4,6 +4,7 @@
 ## ###############################################################
 ## DEPENDENCIES
 ## ###############################################################
+
 from pathlib import Path
 from jormi.ww_io import io_manager
 
@@ -11,6 +12,7 @@ from jormi.ww_io import io_manager
 ## ###############################################################
 ## OPERATOR CLASS
 ## ###############################################################
+
 class OrganiseFilesInSimDirectory():
   def __init__(
     self,
