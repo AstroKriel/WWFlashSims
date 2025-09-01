@@ -1,17 +1,17 @@
-## START OF MODULE
+## { MODULE
 
 
-## ###############################################################
-## DEPENDENCIES
-## ###############################################################
+##
+## === DEPENDENCIES ===
+##
 
 from pathlib import Path
 from jormi.ww_io import io_manager
 
 
-## ###############################################################
-## OPERATOR CLASS
-## ###############################################################
+##
+## === OPERATOR CLASS ===
+##
 
 class OrganiseFilesInSimDirectory():
   def __init__(
@@ -84,4 +84,4 @@ class OrganiseFilesInSimDirectory():
       print(f"Deleted {len(files_to_delete)} old checkpoint files.")
 
 
-## END OF MODULE
+## } MODULE

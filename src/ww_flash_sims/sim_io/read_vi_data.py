@@ -1,9 +1,9 @@
-## START OF MODULE
+## { MODULE
 
 
-## ###############################################################
-## DEPENDENCIES
-## ###############################################################
+##
+## === DEPENDENCIES ===
+##
 
 import numpy
 from pathlib import Path
@@ -11,9 +11,9 @@ from jormi.utils import list_utils
 from jormi.ww_io import io_manager
 
 
-## ###############################################################
-## FUNCTIONS
-## ###############################################################
+##
+## === FUNCTIONS ===
+##
 
 def read_vi_data(
   directory     : str | Path,
@@ -118,4 +118,4 @@ def _extract_data(
   return list(reversed(times)), list(reversed(values))
 
 
-## END OF MODULE
+## } MODULE

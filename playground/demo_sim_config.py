@@ -1,5 +1,6 @@
-from ww_flash_sims.sim_types import ssd_sim
+## { MODULE
 
+from ww_flash_sims.sim_types import ssd_sim
 
 def main():
   tmp_directory = "/home/586/nk7952/asgard/sindri/python/ww_flash_sims/playground/tmp"
@@ -22,4 +23,4 @@ def main():
 if __name__ == "__main__":
   main()
 
-## end of demo script
+## } MODULE

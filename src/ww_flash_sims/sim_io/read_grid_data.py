@@ -1,18 +1,18 @@
-## START OF MODULE
+## { MODULE
 
 
-## ###############################################################
-## DEPENDENCIES
-## ###############################################################
+##
+## === DEPENDENCIES ===
+##
 
 import h5py
 import numpy
 from jormi.ww_io import io_manager
 
 
-## ###############################################################
-## FUNCTIONS
-## ###############################################################
+##
+## === FUNCTIONS ===
+##
 
 def read_grid_properties(file_path):
   io_manager.does_file_exist(file_path=file_path, raise_error=True)
@@ -206,4 +206,4 @@ def read_flash_field(
     return vfield
 
 
-## END OF MODULE
+## } MODULE

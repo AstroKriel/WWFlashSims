@@ -1,18 +1,17 @@
-## START OF MODULE
+## { MODULE
 
 
-## ###############################################################
-## DEPENDENCIES
-## ###############################################################
+##
+## === DEPENDENCIES ===
+##
 
-import json
 from pathlib import Path
 from jormi.ww_io import io_manager, json_files
 
 
-## ###############################################################
-## OPERATOR CLASS
-## ###############################################################
+##
+## === OPERATOR CLASS ===
+##
 
 class SSDSimulation():
   ALIASES = {
@@ -231,11 +230,11 @@ class SSDSimulation():
     elif self.dumps_per_turnover_time < 0: raise ValueError("`dumps_per_turnover_time` must be non-negative.")
 
 
-## ###############################################################
-## CREATE ALIASES
-## ###############################################################
+##
+## === CREATE ALIASES ===
+##
 
 SSDSimulation._create_aliases()
 
 
-## END OF MODULE
+## } MODULE

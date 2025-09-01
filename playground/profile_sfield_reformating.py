@@ -1,6 +1,10 @@
-## ###############################################################
-## DEPENDANCIES
-## ###############################################################
+## { SCRIPT
+
+
+##
+## === DEPENDENCIES ===
+##
+
 import time
 import h5py
 import numpy
@@ -11,18 +15,22 @@ from jormi.ww_plots import plot_manager, add_annotations
 from ww_flash_sims.sim_io import read_grid_data
 
 
-## ###############################################################
-## HELPER FUNCTION
-## ###############################################################
-def print_elapsed_time_stats(reformat_times):
+##
+## === HELPER FUNCTIONS ===
+##
+
+def print_elapsed_time_stats(
+  reformat_times
+):
   print(f"\t- min: {numpy.min(reformat_times):.3f} seconds")
   print(f"\t- ave: {numpy.median(reformat_times):.3f} +/- {numpy.std(reformat_times):.3f} seconds")
   print(f"\t- max: {numpy.max(reformat_times):.3f} seconds")
 
 
-## ###############################################################
-## ROUTINE
-## ###############################################################
+##
+## === ROUTINE ===
+##
+
 class FlashReformatProfiler:
   VALID_REFORMATTERS = {
     "v1": partial(read_grid_data._reformat_flash_sfield_v1, force_use=True),
@@ -125,9 +133,10 @@ class FlashReformatProfiler:
     plot_manager.save_figure(fig, output_path)
 
 
-## ###############################################################
-## SCRIPT ENTRY POINT
-## ###############################################################
+##
+## === ENTRY POINT ===
+##
+
 if __name__ == "__main__":
   parser = argparse.ArgumentParser(description="Profile FLASH field reformatting performance and generate diagnostics.")
   parser.add_argument("-version", required=True, choices=["v1", "v2", "v3"], help="Choose a version of the reformatter to test (v3 is the most recent).")
@@ -149,4 +158,4 @@ if __name__ == "__main__":
   profiler.run()
 
 
-## END OF SCRIPT
+## } SCRIPT
