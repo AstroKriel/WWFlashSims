@@ -29,7 +29,8 @@ def read_grid_properties(file_path):
             ]
             properties["int_scalars"] = _extract_properties(hdf5_file, "integer scalars")
             properties["int_properties"] = _extract_properties(
-                hdf5_file, "integer runtime parameters"
+                hdf5_file,
+                "integer runtime parameters",
             )
     except KeyError as exception:
         print(f"The group {exception} was not found in: {file_path}.")
@@ -79,7 +80,7 @@ def _reformat_flash_sfield_v1(
   """
     if not force_use:
         print(
-            "Warning: depreciated FLASH reformatter was called. Using the up-to-date and optimised version instead."
+            "Warning: depreciated FLASH reformatter was called. Using the up-to-date and optimised version instead.",
         )
         return _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block)
     ## initialise output array with fortran-style axis ordering: [z, y, x]
@@ -98,12 +99,9 @@ def _reformat_flash_sfield_v1(
         for index_block_y in range(num_blocks[1]):
             for index_block_x in range(num_blocks[0]):
                 sfield_sorted[
-                    index_block_z * num_cells_per_block[2]:(index_block_z + 1) *
-                    num_cells_per_block[2],
-                    index_block_y * num_cells_per_block[1]:(index_block_y + 1) *
-                    num_cells_per_block[1],
-                    index_block_x * num_cells_per_block[0]:(index_block_x + 1) *
-                    num_cells_per_block[0],
+                    index_block_z * num_cells_per_block[2]:(index_block_z + 1) * num_cells_per_block[2],
+                    index_block_y * num_cells_per_block[1]:(index_block_y + 1) * num_cells_per_block[1],
+                    index_block_x * num_cells_per_block[0]:(index_block_x + 1) * num_cells_per_block[0],
                 ] = sfield[block_index, :, :, :]
                 block_index += 1
     ## reorder axis from fortran-style [z, y, x] to C-style [x, y, z]
@@ -122,7 +120,7 @@ def _reformat_flash_sfield_v2(
   """
     if not force_use:
         print(
-            "Warning: depreciated FLASH reformatter was called. Using the up-to-date and optimised version instead."
+            "Warning: depreciated FLASH reformatter was called. Using the up-to-date and optimised version instead.",
         )
         return _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block)
     ## see version 3 for an explanation
@@ -200,19 +198,13 @@ def read_flash_field(
         grid_properties["num_cells_per_block_z"],
     )
     matched_dataset_names = [
-        _dataset_name for _dataset_name in grid_properties["dataset_names"]
-        if _dataset_name.startswith(dataset_name)
+        _dataset_name for _dataset_name in grid_properties["dataset_names"] if _dataset_name.startswith(dataset_name)
     ]
     if len(matched_dataset_names) == 0:
         raise KeyError(f"No datasets found starting with `{dataset_name}` in file {file_path}")
     with h5py.File(file_path, "r") as hdf5_file:
-        raw_fields = [
-            numpy.array(hdf5_file[_dataset_name])
-            for _dataset_name in sorted(matched_dataset_names)
-        ]
-    reformatted_fields = [
-        _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block) for sfield in raw_fields
-    ]
+        raw_fields = [numpy.array(hdf5_file[_dataset_name]) for _dataset_name in sorted(matched_dataset_names)]
+    reformatted_fields = [_reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block) for sfield in raw_fields]
     if len(matched_dataset_names) == 1:
         sfield = reformatted_fields[0]
         return sfield

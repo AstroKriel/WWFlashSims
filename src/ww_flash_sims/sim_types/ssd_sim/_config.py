@@ -156,7 +156,7 @@ class SSDSimulation():
                     f"(alias: `{alias_name}`)" if alias_name else "",
                     var_value,
                     type(var_value).__name__,
-                )
+                ),
             )
         entries.sort(key=lambda entry: entry[0])
         max_var_name_len = max(len(var_name) for var_name, _, _, _ in entries)
@@ -195,11 +195,9 @@ class SSDSimulation():
         elif self.N_res in [18]: self.num_blocks = (6, 6, 6)
         else:
             raise ValueError(
-                f"Simulation width box length resolution = `{self.N_res}` is not supported."
+                f"Simulation width box length resolution = `{self.N_res}` is not supported.",
             )
-        self.num_cells_per_block = tuple(
-            int(self.N_res / num_blocks_in_dir) for num_blocks_in_dir in self.num_blocks
-        )
+        self.num_cells_per_block = tuple(int(self.N_res / num_blocks_in_dir) for num_blocks_in_dir in self.num_blocks)
 
     def _compute_missing_init_conditions(self):
         u_turb_0 = self.mach_0 / self.c_s
@@ -225,7 +223,7 @@ class SSDSimulation():
             self.nu = self.eta * self.Pm_0
         else:
             raise Exception(
-                f"Insufficient plasma numbers provided: Re_0 = {self.Re_0:.2f}, Rm_0 = {self.Rm_0:.2f}, and Pm_0 = {self.Pm_0:.2f}."
+                f"Insufficient plasma numbers provided: Re_0 = {self.Re_0:.2f}, Rm_0 = {self.Rm_0:.2f}, and Pm_0 = {self.Pm_0:.2f}.",
             )
 
     def _check_all_params_are_defined(self):
@@ -238,7 +236,7 @@ class SSDSimulation():
     def _check_all_params_are_valid(self):
         if self.scaled_k_turb < 1.0:
             raise ValueError(
-                "Forcing mode should be smaller than the simulation box; `box_normalised_forcing_wave_number` > 1."
+                "Forcing mode should be smaller than the simulation box; `box_normalised_forcing_wave_number` > 1.",
             )
         if not isinstance(self.dumps_per_turnover_time, int):
             raise TypeError("`dumps_per_turnover_time` must be an integer.")

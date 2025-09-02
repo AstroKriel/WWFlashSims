@@ -23,7 +23,7 @@ def print_elapsed_time_stats(
 ):
     print(f"\t- min: {numpy.min(reformat_times):.3f} seconds")
     print(
-        f"\t- ave: {numpy.median(reformat_times):.3f} +/- {numpy.std(reformat_times):.3f} seconds"
+        f"\t- ave: {numpy.median(reformat_times):.3f} +/- {numpy.std(reformat_times):.3f} seconds",
     )
     print(f"\t- max: {numpy.max(reformat_times):.3f} seconds")
 
@@ -79,7 +79,9 @@ class FlashReformatProfiler:
         for _ in range(self.reformat_repeats):
             start_time = time.time()
             reformatted_sfield = self.reformat_func(
-                self.sfield_raw, self.num_blocks, self.num_cells_per_block
+                self.sfield_raw,
+                self.num_blocks,
+                self.num_cells_per_block,
             )
             reformat_times.append(time.time() - start_time)
         print(f"Reformat stats (after {self.reformat_repeats} repeats):")
@@ -143,25 +145,25 @@ class FlashReformatProfiler:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Profile FLASH field reformatting performance and generate diagnostics."
+        description="Profile FLASH field reformatting performance and generate diagnostics.",
     )
     parser.add_argument(
         "-version",
         required=True,
         choices=["v1", "v2", "v3"],
-        help="Choose a version of the reformatter to test (v3 is the most recent)."
+        help="Choose a version of the reformatter to test (v3 is the most recent).",
     )
     parser.add_argument(
         "-reformat_repeats",
         type=int,
         default=5,
-        help="Number of times to run the reformatting function."
+        help="Number of times to run the reformatting function.",
     )
     parser.add_argument(
         "-postprocess_repeats",
         type=int,
         default=0,
-        help="Number of times to run postprocessing steps like gradients and FFTs."
+        help="Number of times to run postprocessing steps like gradients and FFTs.",
     )
     parser.add_argument("-plot", action="store_true", help="Plot field slices.")
     args = parser.parse_args()

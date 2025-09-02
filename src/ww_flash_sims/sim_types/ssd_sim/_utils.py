@@ -11,8 +11,7 @@ def get_user_directory():
         "--directory",
         type=str,
         required=False,
-        help=
-        "Specific simulation path to process. If not provided, all simulations will be processed.",
+        help="Specific simulation path to process. If not provided, all simulations will be processed.",
     )
     args = parser.parse_args()
     if args.directory:
@@ -25,7 +24,8 @@ def get_user_directory():
 def get_all_ssd_sim_directories():
     matching_directories = sorted(Path("/scratch").glob("*/nk7952/R*/Mach*/Pm*/*"))
     return sorted(
-        directory.resolve() for directory in matching_directories
+        directory.resolve()
+        for directory in matching_directories
         if io_manager.does_directory_exist(directory) and ("anti" not in str(directory))
     )
 
