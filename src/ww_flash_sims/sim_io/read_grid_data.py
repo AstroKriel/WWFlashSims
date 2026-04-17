@@ -6,7 +6,7 @@
 
 import h5py
 import numpy
-from jormi.ww_io import io_manager
+from jormi.ww_io import manage_io as io_manager
 
 ##
 ## === FUNCTIONS ===
