@@ -7,7 +7,10 @@ authors = [
   { name = "Neco Kriel", email = "necokriel@gmail.com" }
 ]
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+  "h5py",
+  "numpy",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -17,6 +20,7 @@ build-backend = "hatchling.build"
 sources = ["src"]
 
 [tool.hatch.build.targets.wheel]
+## explicit because distribution name (ww-flash-sims) differs from folder name (ww_flash_sims)
 packages = ["src/ww_flash_sims"]
 
 [tool.pyright]
