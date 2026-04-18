@@ -13,10 +13,15 @@ from jormi.ww_io import manage_io as io_manager
 ##
 
 
-def read_grid_properties(file_path):
+def read_grid_properties(
+    file_path,
+):
     io_manager.does_file_exist(file_path=file_path, raise_error=True)
 
-    def _extract_properties(_h5file, dataset_name):
+    def _extract_properties(
+        _h5file,
+        dataset_name,
+    ):
         return {str(key).split("'")[1].strip(): value for key, value in _h5file[dataset_name]}
 
     ## check that the file is the right type and has the right structure before proceeding
@@ -198,13 +203,18 @@ def read_flash_field(
         grid_properties["num_cells_per_block_z"],
     )
     matched_dataset_names = [
-        _dataset_name for _dataset_name in grid_properties["dataset_names"] if _dataset_name.startswith(dataset_name)
+        _dataset_name for _dataset_name in grid_properties["dataset_names"]
+        if _dataset_name.startswith(dataset_name)
     ]
     if len(matched_dataset_names) == 0:
         raise KeyError(f"No datasets found starting with `{dataset_name}` in file {file_path}")
     with h5py.File(file_path, "r") as hdf5_file:
-        raw_fields = [numpy.array(hdf5_file[_dataset_name]) for _dataset_name in sorted(matched_dataset_names)]
-    reformatted_fields = [_reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block) for sfield in raw_fields]
+        raw_fields = [
+            numpy.array(hdf5_file[_dataset_name]) for _dataset_name in sorted(matched_dataset_names)
+        ]
+    reformatted_fields = [
+        _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block) for sfield in raw_fields
+    ]
     if len(matched_dataset_names) == 1:
         sfield = reformatted_fields[0]
         return sfield

@@ -30,7 +30,10 @@ def get_all_ssd_sim_directories():
     )
 
 
-def is_ssd_sim(directory, raise_error=False):
+def is_ssd_sim(
+    directory,
+    raise_error=False,
+):
     all_ssd_directories = get_all_ssd_sim_directories()
     result = directory in all_ssd_directories
     if not (result) and raise_error:
@@ -38,7 +41,9 @@ def is_ssd_sim(directory, raise_error=False):
     return result
 
 
-def do_for_simulations(func):
+def do_for_simulations(
+    func,
+):
     directory = get_user_directory()
     all_ssd_directories = get_all_ssd_sim_directories()
     if not directory:

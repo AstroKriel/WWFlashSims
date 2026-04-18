@@ -89,16 +89,22 @@ class SSDSimulation():
         self._compute_missing_params()
         self._validate_params()
 
-    def _compute_missing_params(self):
+    def _compute_missing_params(
+        self,
+    ):
         self._compute_grid_properties()
         self._compute_missing_init_conditions()
         self._compute_missing_plasma_numbers()
 
-    def _validate_params(self):
+    def _validate_params(
+        self,
+    ):
         self._check_all_params_are_defined()
         self._check_all_params_are_valid()
 
-    def _to_dict(self):
+    def _to_dict(
+        self,
+    ):
         result = {}
         for key, value in self.__dict__.items():
             if isinstance(value, Path): result[key] = str(value)
@@ -107,7 +113,10 @@ class SSDSimulation():
         return result
 
     @classmethod
-    def _from_dict(cls, config):
+    def _from_dict(
+        cls,
+        config,
+    ):
         if ("num_blocks" in config) and (config["num_blocks"] is not None):
             config["num_blocks"] = tuple(config["num_blocks"])
         if ("num_cells_per_block" in config) and (config["num_cells_per_block"] is not None):
@@ -145,7 +154,9 @@ class SSDSimulation():
         )
         return cls._from_dict(config_dict)
 
-    def print_sim_params(self):
+    def print_sim_params(
+        self,
+    ):
         reverse_aliases = {value: key for key, value in self.ALIASES.items()}
         entries = []
         for var_name, var_value in self.__dict__.items():
@@ -172,7 +183,11 @@ class SSDSimulation():
         print(" ")
 
     @classmethod
-    def _alias(cls, alias_name, var_name):
+    def _alias(
+        cls,
+        alias_name,
+        var_name,
+    ):
         setattr(
             cls,
             alias_name,
@@ -184,11 +199,15 @@ class SSDSimulation():
         )
 
     @classmethod
-    def _create_aliases(cls):
+    def _create_aliases(
+        cls,
+    ):
         for alias_name, var_name in cls.ALIASES.items():
             cls._alias(alias_name, var_name)
 
-    def _compute_grid_properties(self):
+    def _compute_grid_properties(
+        self,
+    ):
         if self.N_res in [576, 1152]: self.num_blocks = (96, 96, 72)
         elif self.N_res in [144, 288]: self.num_blocks = (36, 36, 48)
         elif self.N_res in [36, 72]: self.num_blocks = (12, 12, 18)
@@ -197,16 +216,22 @@ class SSDSimulation():
             raise ValueError(
                 f"Simulation width box length resolution = `{self.N_res}` is not supported.",
             )
-        self.num_cells_per_block = tuple(int(self.N_res / num_blocks_in_dir) for num_blocks_in_dir in self.num_blocks)
+        self.num_cells_per_block = tuple(
+            int(self.N_res / num_blocks_in_dir) for num_blocks_in_dir in self.num_blocks
+        )
 
-    def _compute_missing_init_conditions(self):
+    def _compute_missing_init_conditions(
+        self,
+    ):
         u_turb_0 = self.mach_0 / self.c_s
         ell_turb = self.ell_box / self.scaled_k_turb
         self.init_kinetic_energy = 0.5 * self.rho * u_turb_0 * u_turb_0
         self.init_magnetic_energy = self.init_kinetic_energy * self.init_energy_ratio
         self.init_turnover_time = ell_turb / u_turb_0
 
-    def _compute_missing_plasma_numbers(self):
+    def _compute_missing_plasma_numbers(
+        self,
+    ):
         u_turb_0 = self.mach_0 / self.c_s
         ell_turb = self.ell_box / self.scaled_k_turb  # recall: scaled_k_turb = k_turb ell_box / (2 pi)
         if (self.Re_0 is not None) and (self.Pm_0 is not None):
@@ -226,14 +251,18 @@ class SSDSimulation():
                 f"Insufficient plasma numbers provided: Re_0 = {self.Re_0:.2f}, Rm_0 = {self.Rm_0:.2f}, and Pm_0 = {self.Pm_0:.2f}.",
             )
 
-    def _check_all_params_are_defined(self):
+    def _check_all_params_are_defined(
+        self,
+    ):
         undefined_vars = []
         for var_name, var_value in self.__dict__.items():
             if var_value is None: undefined_vars.append(var_name)
         if len(undefined_vars) > 0:
             raise ValueError(f"The following parameters have not been defined: {undefined_vars}")
 
-    def _check_all_params_are_valid(self):
+    def _check_all_params_are_valid(
+        self,
+    ):
         if self.scaled_k_turb < 1.0:
             raise ValueError(
                 "Forcing mode should be smaller than the simulation box; `box_normalised_forcing_wave_number` > 1.",

@@ -40,7 +40,15 @@ class FlashReformatProfiler:
         "v3": read_grid_data._reformat_flash_sfield_v3,
     }
 
-    def __init__(self, *, file_path, version, reformat_repeats, postprocess_repeats, make_plots):
+    def __init__(
+        self,
+        *,
+        file_path,
+        version,
+        reformat_repeats,
+        postprocess_repeats,
+        make_plots,
+    ):
         io_manager.does_file_exist(file_path=file_path, raise_error=True)
         self.file_path = file_path
         self.version = version
@@ -50,7 +58,9 @@ class FlashReformatProfiler:
         if self.version not in self.VALID_REFORMATTERS:
             raise ValueError(f"Invalid version {self.version}")
 
-    def run(self):
+    def run(
+        self,
+    ):
         self._load_data()
         self.reformat_func = self.VALID_REFORMATTERS[self.version]
         reformatted_sfield = self._benchmark_reformatter()
@@ -58,7 +68,9 @@ class FlashReformatProfiler:
         if self.postprocess_repeats > 0: self._benchmark_postprocess(reformatted_sfield)
         if self.make_plots: self._plot_slices(reformatted_sfield)
 
-    def _load_data(self):
+    def _load_data(
+        self,
+    ):
         grid_props = read_grid_data.read_grid_properties(self.file_path)
         self.num_blocks = (
             grid_props["num_blocks_x"],
@@ -73,7 +85,9 @@ class FlashReformatProfiler:
         with h5py.File(self.file_path, "r") as hdf5_file:
             self.sfield_raw = numpy.array(hdf5_file["dens"])
 
-    def _benchmark_reformatter(self):
+    def _benchmark_reformatter(
+        self,
+    ):
         reformat_times = []
         reformatted_sfield = None
         for _ in range(self.reformat_repeats):
@@ -88,7 +102,10 @@ class FlashReformatProfiler:
         print_elapsed_time_stats(reformat_times)
         return reformatted_sfield
 
-    def _print_stats(self, reformatted_sfield):
+    def _print_stats(
+        self,
+        reformatted_sfield,
+    ):
         print("Array properties:")
         print(f"\t- Input shape: {self.sfield_raw.shape}")
         print(f"\t- Output shape: {reformatted_sfield.shape}")
@@ -98,7 +115,10 @@ class FlashReformatProfiler:
             formatted_line = line.strip().replace(" :", ":")
             print(f"\t- {formatted_line}")
 
-    def _benchmark_postprocess(self, reformatted_sfield):
+    def _benchmark_postprocess(
+        self,
+        reformatted_sfield,
+    ):
         postprocess_times = []
         for _ in range(self.postprocess_repeats):
             start = time.time()
@@ -107,7 +127,10 @@ class FlashReformatProfiler:
         print(f"Postprocess stats (after {self.postprocess_repeats} repeats):")
         print_elapsed_time_stats(postprocess_times)
 
-    def _plot_slices(self, reformatted_sfield):
+    def _plot_slices(
+        self,
+        reformatted_sfield,
+    ):
         fig, axs = plot_manager.create_figure(num_rows=3, share_x=True)
         sfield_slices = [
             reformatted_sfield[reformatted_sfield.shape[0] // 2, :, :],
@@ -133,7 +156,11 @@ class FlashReformatProfiler:
             ax.set_yticks([])
         self._save_figure(fig, f"slices_{self.version}.png")
 
-    def _save_figure(self, fig, filename):
+    def _save_figure(
+        self,
+        fig,
+        filename,
+    ):
         script_dir = io_manager.get_caller_directory()
         output_path = io_manager.combine_file_path_parts([script_dir, filename])
         plot_manager.save_figure(fig, output_path)

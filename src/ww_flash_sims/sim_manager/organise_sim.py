@@ -26,12 +26,16 @@ class OrganiseFilesInSimDirectory():
         self.num_chk_to_keep = num_chk_to_keep
         io_manager.init_directory(self.plt_directory, verbose=False)
 
-    def run(self):
+    def run(
+        self,
+    ):
         self._delete_proj_files()
         self._move_plt_files()
         self._reduce_chk_files()
 
-    def _delete_proj_files(self):
+    def _delete_proj_files(
+        self,
+    ):
         files = io_manager.filter_files(
             directory=self.sim_directory,
             prefix="Turb_proj_",
@@ -47,7 +51,9 @@ class OrganiseFilesInSimDirectory():
             )
         print(f"Deleted {len(files)} projection files.")
 
-    def _move_plt_files(self):
+    def _move_plt_files(
+        self,
+    ):
         files = io_manager.filter_files(
             directory=self.sim_directory,
             prefix="Turb_hdf5_plt_cnt_",
@@ -65,7 +71,9 @@ class OrganiseFilesInSimDirectory():
             )
         print(f"Moved {len(files)} plt files to {self.plt_directory}.")
 
-    def _reduce_chk_files(self):
+    def _reduce_chk_files(
+        self,
+    ):
         files = io_manager.filter_files(
             directory=self.sim_directory,
             prefix="Turb_hdf5_chk_",

@@ -54,7 +54,9 @@ def read_vi_data(
     return numpy.array(times[start_idx:end_idx]), numpy.array(values[start_idx:end_idx])
 
 
-def _read_file_lines(file_path: str | Path) -> list[str]:
+def _read_file_lines(
+    file_path: str | Path,
+) -> list[str]:
     with open(file_path, "r") as file_pointer:
         return file_pointer.readlines()
 
