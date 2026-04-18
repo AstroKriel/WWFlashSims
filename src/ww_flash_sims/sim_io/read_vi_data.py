@@ -1,16 +1,21 @@
 ## { MODULE
 
 ##
-## === DEPENDENCIES ===
+## === DEPENDENCIES
 ##
 
-import numpy
+## stdlib
 from pathlib import Path
+
+## third-party
+import numpy
+
+## personal
 from jormi.utils import list_utils
 from jormi.ww_io import io_manager
 
 ##
-## === FUNCTIONS ===
+## === FUNCTIONS
 ##
 
 
@@ -46,11 +51,13 @@ def read_vi_data(
         time_norm=time_norm,
         raise_error=raise_error,
     )
-    if len(times) == 0: return [], []
+    if len(times) == 0:
+        return [], []
     end_time = end_time if (end_time is not None) else times[-1]
     start_idx = list_utils.get_index_of_closest_value(times, start_time)
     end_idx = list_utils.get_index_of_closest_value(times, end_time)
-    if start_idx == end_idx: end_idx = numpy.min(end_idx + 1, len(times))
+    if start_idx == end_idx:
+        end_idx = numpy.min(end_idx + 1, len(times))
     return numpy.array(times[start_idx:end_idx]), numpy.array(values[start_idx:end_idx])
 
 
@@ -76,7 +83,8 @@ def _resolve_dataset_index(
     dataset_name: str | None,
     header_names: list[str],
 ) -> int:
-    if dataset_index is not None: return dataset_index
+    if dataset_index is not None:
+        return dataset_index
     if dataset_name is None:
         raise ValueError("You need to either provide `dataset_index` or `dataset_name`.")
     lookup_dataset_index = {
@@ -106,8 +114,10 @@ def _extract_data(
     times, values = [], []
     for line in reversed(lines):
         tokens = line.strip().split()
-        if len(tokens) != num_datasets: continue
-        if "#" in tokens[time_index] or "#" in tokens[dataset_index]: continue
+        if len(tokens) != num_datasets:
+            continue
+        if "#" in tokens[time_index] or "#" in tokens[dataset_index]:
+            continue
         try:
             time_val = float(tokens[time_index]) / time_norm
             data_val = float(tokens[dataset_index])
@@ -116,7 +126,8 @@ def _extract_data(
         if time_val < prev_time:
             if data_val == 0.0 and time_val > 0:
                 message = f"field[{dataset_index}] = 0.0 at time = {time_val:.3f}"
-                if raise_error: raise ValueError(f"Error: {message}")
+                if raise_error:
+                    raise ValueError(f"Error: {message}")
                 print(f"Warning: {message}")
                 continue
             times.append(time_val)
