@@ -73,81 +73,7 @@ def read_grid_properties(
         return {}
 
 
-def _reformat_flash_sfield_v1(
-    sfield: numpy.ndarray,
-    num_blocks: tuple[int, int, int],
-    num_cells_per_block: tuple[int, int, int],
-    force_use: bool = False,
-):
-    """
-  Deprecated FLASH scalar-field reformatter:
-  Uses explicit block indexing; memory-friendly but overly verbose and loop-based.
-  """
-    if not force_use:
-        print(
-            "Warning: depreciated FLASH reformatter was called. Using the up-to-date and optimised version instead.",
-        )
-        return _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block)
-    ## initialise output array with fortran-style axis ordering: [z, y, x]
-    sfield_sorted = numpy.zeros(
-        shape=(
-            num_cells_per_block[2] * num_blocks[2],
-            num_cells_per_block[1] * num_blocks[1],
-            num_cells_per_block[0] * num_blocks[0],
-        ),
-        dtype=numpy.float32,
-        order="C",  # use C-contiguous memory layout (for consistency with numpy operation)
-    )
-    ## copy each block into its corresponding region
-    block_index = 0
-    for index_block_z in range(num_blocks[2]):
-        for index_block_y in range(num_blocks[1]):
-            for index_block_x in range(num_blocks[0]):
-                sfield_sorted[
-                    index_block_z * num_cells_per_block[2]:(index_block_z + 1) * num_cells_per_block[2],
-                    index_block_y * num_cells_per_block[1]:(index_block_y + 1) * num_cells_per_block[1],
-                    index_block_x * num_cells_per_block[0]:(index_block_x + 1) * num_cells_per_block[0],
-                ] = sfield[block_index, :, :, :]
-                block_index += 1
-    ## reorder axis from fortran-style [z, y, x] to C-style [x, y, z]
-    return numpy.transpose(sfield_sorted, (2, 1, 0))
-
-
-def _reformat_flash_sfield_v2(
-    sfield: numpy.ndarray,
-    num_blocks: tuple[int, int, int],
-    num_cells_per_block: tuple[int, int, int],
-    force_use: bool = False,
-):
-    """
-  Deprecated FLASH scalar-field reformatter:
-  Vectorised (avoids loops), but poor memory layout leads to inefficient cache usage.
-  """
-    if not force_use:
-        print(
-            "Warning: depreciated FLASH reformatter was called. Using the up-to-date and optimised version instead.",
-        )
-        return _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block)
-    ## see version 3 for an explanation
-    sfield_sorted = sfield.reshape(
-        num_blocks[2],
-        num_blocks[1],
-        num_blocks[0],
-        num_cells_per_block[2],
-        num_cells_per_block[1],
-        num_cells_per_block[0],
-    )
-    ## warning: this layout is not memory-contiguous along the merge axes; leads to inefficient cache usage during the reshape
-    sfield_sorted = numpy.transpose(sfield_sorted, (2, 5, 1, 4, 0, 3))
-    sfield_sorted = sfield_sorted.reshape(
-        num_blocks[0] * num_cells_per_block[0],
-        num_blocks[1] * num_cells_per_block[1],
-        num_blocks[2] * num_cells_per_block[2],
-    )
-    return sfield_sorted
-
-
-def _reformat_flash_sfield_v3(
+def _reformat_flash_sfield(
     sfield: numpy.ndarray,
     num_blocks: tuple[int, int, int],
     num_cells_per_block: tuple[int, int, int],
@@ -213,7 +139,7 @@ def read_flash_field(
             numpy.array(hdf5_file[_dataset_name]) for _dataset_name in sorted(matched_dataset_names)
         ]
     reformatted_fields = [
-        _reformat_flash_sfield_v3(sfield, num_blocks, num_cells_per_block) for sfield in raw_fields
+        _reformat_flash_sfield(sfield, num_blocks, num_cells_per_block) for sfield in raw_fields
     ]
     if len(matched_dataset_names) == 1:
         sfield = reformatted_fields[0]
