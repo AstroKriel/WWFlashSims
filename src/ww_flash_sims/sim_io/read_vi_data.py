@@ -13,7 +13,6 @@ import numpy
 
 ## personal
 from jormi import ww_lists
-from jormi.ww_io import manage_io
 
 ##
 ## === CLASSES
@@ -74,17 +73,33 @@ def read_vi_data(
     """
     Read a named dataset from a FLASH volume-integrated `.dat` file.
 
-    Iterates through the file in reverse to handle restarts: overlapping time
-    entries from earlier runs are discarded, keeping only the latest contiguous
-    monotonically increasing sequence. Zero-valued field entries at non-zero
-    times are treated as corrupt and skipped (or raised as errors if
-    `raise_error=True`).
-
-    Raises if `print_header=True`, no valid data is found, or the requested
+    Restart overlaps are handled automatically: only the latest contiguous
+    time sequence is kept. Raises if no valid data is found or the requested
     dataset cannot be resolved.
+
+    Parameters
+    ---
+    - `dataset_name`:
+        Shorthand alias for common datasets: `"kin"`, `"mag"`, `"mach"`.
+        Mutually exclusive with `dataset_index`.
+
+    - `dataset_index`:
+        Direct zero-based column index. Mutually exclusive with `dataset_name`.
+
+    - `end_time`:
+        Upper bound of the time window in normalised units.
+        Defaults to the last valid time in the file if `None`.
+
+    - `raise_error`:
+        If `True`, raises on zero-valued field entries at non-zero times.
+        If `False`, warns and skips them.
+
+    - `print_header`:
+        If `True`, prints the available dataset names and raises without returning data.
     """
-    file_path = manage_io.combine_file_path_parts([directory, file_name])
-    manage_io.does_file_exist(file_path=file_path, raise_error=True)
+    file_path = Path(directory) / file_name
+    if not file_path.is_file():
+        raise FileNotFoundError(f"No .dat file found: {file_path}")
     file_lines = _read_file_lines(file_path)
     header_names = file_lines[0].split()
     num_datasets = len(header_names)
@@ -110,7 +125,7 @@ def read_vi_data(
     start_idx = ww_lists.get_index_of_closest_value(times, start_time)
     end_idx = ww_lists.get_index_of_closest_value(times, end_time)
     if start_idx == end_idx:
-        end_idx = numpy.min(end_idx + 1, len(times))
+        end_idx = min(end_idx + 1, len(times))
     return VIData(
         times=numpy.array(times[start_idx:end_idx]),
         values=numpy.array(values[start_idx:end_idx]),
@@ -129,8 +144,7 @@ def _read_file_lines(
 def _print_header(
     file_path: str | Path,
     header_names: list[str],
-):
-    """Print the available dataset names and their column indices."""
+) -> None:
     print(f"Available datasets in: {file_path}")
     for dataset_index, dataset_name in enumerate(header_names):
         print(f"\tindex: {dataset_index:2d} - name: {dataset_name}")
@@ -142,11 +156,6 @@ def _resolve_dataset_index(
     dataset_name: str | None,
     header_names: list[str],
 ) -> int:
-    """
-    Resolve a column index from either a direct index or a shorthand name.
-
-    Raises if neither is provided, or if `dataset_name` is not a recognised shorthand.
-    """
     if dataset_index is not None:
         return dataset_index
     if dataset_name is None:
@@ -173,13 +182,7 @@ def _extract_data(
     time_norm: float,
     raise_error: bool,
 ) -> tuple[list[float], list[float]]:
-    """
-    Extract time and field values from data lines, discarding restart overlaps.
-
-    Iterates in reverse so that when a simulation was restarted (producing duplicate
-    or rewound time entries), only the most recent run's data is kept. Zero-valued
-    field entries at non-zero times are skipped as corrupt, or raised if `raise_error`.
-    """
+    ## iterates in reverse: when a simulation was restarted, only the most recent run's data is kept
     time_index = 0
     prev_time = numpy.inf
     times, values = [], []

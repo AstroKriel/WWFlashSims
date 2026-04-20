@@ -1,22 +1,33 @@
 ## { MODULE
 
 ##
-## === DEPENDENCIES ===
+## === DEPENDENCIES
 ##
 
+## stdlib
+from pathlib import Path
+
+## third-party
 import h5py
 import numpy
-from jormi.ww_io import manage_io as io_manager
 
 ##
-## === FUNCTIONS ===
+## === FUNCTIONS
 ##
 
 
 def read_grid_properties(
-    file_path,
-):
-    io_manager.does_file_exist(file_path=file_path, raise_error=True)
+    file_path: str | Path,
+) -> dict:
+    """
+    Read block and cell structure metadata from a FLASH HDF5 output file.
+
+    Returns an empty dict and prints a warning if the file cannot be read
+    or required keys are missing.
+    """
+    file_path = Path(file_path)
+    if not file_path.is_file():
+        raise FileNotFoundError(f"No FLASH file found: {file_path}")
 
     def _extract_properties(
         _h5file,
@@ -43,7 +54,8 @@ def read_grid_properties(
     except Exception as exception:
         print(f"An unexpected error occurred: {exception}")
         return {}
-    if len(properties["plasma_datasets"]) == 0: print(f"No plasma datasets found in: {file_path}")
+    if len(properties["plasma_datasets"]) == 0:
+        print(f"No plasma datasets found in: {file_path}")
     try:
         output_num = properties["int_scalars"]["plotfilenumber"]
         dataset_names = properties["plasma_datasets"]
@@ -77,11 +89,8 @@ def _reformat_flash_sfield(
     sfield: numpy.ndarray,
     num_blocks: tuple[int, int, int],
     num_cells_per_block: tuple[int, int, int],
-):
-    """
-  Highly optimised FLASH scalar-field reformatter:
-  Vectorised, cache- and memory-efficient (intermediate arrays are views, only the final output is copied).
-  """
+) -> numpy.ndarray:
+    ## vectorised and cache-friendly: intermediate arrays are views; only the final output is copied
     ## separate the unified block structure into individual block components
     ## reshape from flat: [num_blocks, z, y, x]
     ## to structured: [num_blocks_z, num_blocks_y, num_blocks_x, cells_per_z, cells_per_y, cells_per_x]
@@ -105,15 +114,19 @@ def _reformat_flash_sfield(
     ## convert axis ordering from fortran-style [z, y, x] to C-style [x, y, z]
     sfield_sorted = sfield_sorted.transpose((2, 1, 0))
     return sfield_sorted
-    # ## ensure the result is c-contiguous and owns its data
-    # return numpy.ascontiguousarray(sfield_sorted)
 
 
 def read_flash_field(
-    file_path: str,
+    file_path: str | Path,
     dataset_name: str,
     grid_properties: dict | None = None,
 ) -> numpy.ndarray:
+    """
+    Load a named field from a FLASH HDF5 output file as a sorted ndarray.
+
+    Returns a 3D scalar array if a single dataset matches `dataset_name`,
+    or a 4D array stacked along axis 0 if multiple datasets match.
+    """
     if grid_properties is None:
         grid_properties = read_grid_properties(file_path)
         if not grid_properties:
