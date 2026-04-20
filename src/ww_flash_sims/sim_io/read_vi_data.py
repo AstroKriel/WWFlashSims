@@ -50,7 +50,7 @@ class VIData:
         if len(self.time_values) != len(self.data_values):
             raise ValueError(
                 f"`time_values` and `data_values` must have the same length; "
-                f"got {len(self.time_values)} and {len(self.data_values)}."
+                f"got {len(self.time_values)} and {len(self.data_values)}.",
             )
 
 
@@ -166,7 +166,7 @@ def _resolve_dataset_index(
         return dataset_index
     if dataset_name is None:
         raise ValueError(
-            "You need to either provide `dataset_index` or `dataset_name`."
+            "You need to either provide `dataset_index` or `dataset_name`.",
         )
     lookup_dataset_index = {
         "kin": 9,
