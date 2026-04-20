@@ -9,8 +9,12 @@ authors = [
 requires-python = ">=3.11"
 dependencies = [
   "h5py",
+  "jormi",
   "numpy",
 ]
+
+[tool.uv.sources]
+jormi = { path = "../jormi", editable = true }
 
 [build-system]
 requires = ["hatchling"]
