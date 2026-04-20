@@ -12,6 +12,10 @@ from typing import Any
 import h5py
 import numpy
 
+## personal (local)
+from jormi.ww_fields.fields_3d import domain_types
+from jormi.ww_fields.fields_3d import field_types
+
 ##
 ## === FUNCTIONS
 ##
@@ -21,7 +25,7 @@ def read_grid_properties(
     file_path: str | Path,
 ) -> dict[str, Any]:
     """
-    Read block and cell structure metadata from a FLASH HDF5 output file.
+    Read block, cell, and domain metadata from a FLASH HDF5 output file.
 
     Returns an empty dict and prints a warning if the file cannot be read
     or required keys are missing.
@@ -49,6 +53,13 @@ def read_grid_properties(
                 hdf5_file,
                 "integer runtime parameters",
             )
+            try:
+                properties["real_properties"] = _extract_properties(
+                    hdf5_file,
+                    "real runtime parameters",
+                )
+            except KeyError:
+                properties["real_properties"] = {}
     except KeyError as exception:
         print(f"The group {exception} was not found in: {file_path}.")
         return {}
@@ -69,6 +80,13 @@ def read_grid_properties(
         num_cells_per_block_z = numpy.int32(properties["int_scalars"]["nzb"])
         num_cells_per_block = num_cells_per_block_x * num_cells_per_block_y * num_cells_per_block_z
         num_cells = num_blocks * num_cells_per_block
+        real_props = properties["real_properties"]
+        x_min = float(real_props.get("xmin", -0.5))
+        x_max = float(real_props.get("xmax",  0.5))
+        y_min = float(real_props.get("ymin", -0.5))
+        y_max = float(real_props.get("ymax",  0.5))
+        z_min = float(real_props.get("zmin", -0.5))
+        z_max = float(real_props.get("zmax",  0.5))
         return {
             "output_num": output_num,
             "dataset_names": dataset_names,
@@ -80,10 +98,41 @@ def read_grid_properties(
             "num_cells_per_block_y": num_cells_per_block_y,
             "num_cells_per_block_z": num_cells_per_block_z,
             "num_cells": num_cells,
+            "domain_bounds": ((x_min, x_max), (y_min, y_max), (z_min, z_max)),
         }
     except KeyError as missing_key:
         print(f"Missing key `{missing_key}` in the extracted properties from: {file_path}")
         return {}
+
+
+def compute_cell_widths(
+    *,
+    grid_properties: dict[str, Any],
+) -> tuple[float, float, float]:
+    """Derive uniform cell widths from grid properties and domain bounds."""
+    num_cells_x = grid_properties["num_blocks_x"] * grid_properties["num_cells_per_block_x"]
+    num_cells_y = grid_properties["num_blocks_y"] * grid_properties["num_cells_per_block_y"]
+    num_cells_z = grid_properties["num_blocks_z"] * grid_properties["num_cells_per_block_z"]
+    (x_min, x_max), (y_min, y_max), (z_min, z_max) = grid_properties["domain_bounds"]
+    return (
+        (x_max - x_min) / num_cells_x,
+        (y_max - y_min) / num_cells_y,
+        (z_max - z_min) / num_cells_z,
+    )
+
+
+def read_uniform_domain(
+    grid_properties: dict[str, Any],
+) -> domain_types.UniformDomain_3D:
+    """Construct a UniformDomain_3D from grid properties."""
+    num_cells_x = grid_properties["num_blocks_x"] * grid_properties["num_cells_per_block_x"]
+    num_cells_y = grid_properties["num_blocks_y"] * grid_properties["num_cells_per_block_y"]
+    num_cells_z = grid_properties["num_blocks_z"] * grid_properties["num_cells_per_block_z"]
+    return domain_types.UniformDomain_3D(
+        periodicity=(True, True, True),
+        resolution=(num_cells_x, num_cells_y, num_cells_z),
+        domain_bounds=grid_properties["domain_bounds"],
+    )
 
 
 def _reformat_flash_sfield(
@@ -161,6 +210,61 @@ def read_flash_field(
     else:
         vfield = numpy.stack(reformatted_fields, axis=0)
         return vfield
+
+
+def read_flash_sfield(
+    file_path: str | Path,
+    dataset_name: str,
+    *,
+    field_label: str,
+    grid_properties: dict[str, Any] | None = None,
+) -> field_types.ScalarField_3D:
+    """Load a named scalar field from a FLASH HDF5 output file as a ScalarField_3D."""
+    if grid_properties is None:
+        grid_properties = read_grid_properties(file_path)
+        if not grid_properties:
+            raise ValueError(f"FLASH grid properties could not be read from: {file_path}")
+    sarray = read_flash_field(
+        file_path,
+        dataset_name,
+        grid_properties=grid_properties,
+    )
+    udomain = read_uniform_domain(grid_properties)
+    return field_types.ScalarField_3D.from_3d_sarray(
+        sarray_3d=sarray,
+        udomain_3d=udomain,
+        field_label=field_label,
+    )
+
+
+def read_flash_vfield(
+    file_path: str | Path,
+    dataset_name: str,
+    *,
+    field_label: str,
+    grid_properties: dict[str, Any] | None = None,
+) -> field_types.VectorField_3D:
+    """
+    Load a named vector field from a FLASH HDF5 output file as a VectorField_3D.
+
+    Expects exactly three component datasets matching `dataset_name` (e.g. `magx`,
+    `magy`, `magz` for `dataset_name="mag"`), stacked in alphabetical order along axis 0.
+    """
+    if grid_properties is None:
+        grid_properties = read_grid_properties(file_path)
+        if not grid_properties:
+            raise ValueError(f"FLASH grid properties could not be read from: {file_path}")
+    varray = read_flash_field(
+        file_path,
+        dataset_name,
+        grid_properties=grid_properties,
+    )
+    udomain = read_uniform_domain(grid_properties)
+    return field_types.VectorField_3D.from_3d_varray(
+        varray_3d=varray,
+        udomain_3d=udomain,
+        field_label=field_label,
+    )
 
 
 ## } MODULE
