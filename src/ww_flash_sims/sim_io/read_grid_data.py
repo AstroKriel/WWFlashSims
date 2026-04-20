@@ -6,6 +6,7 @@
 
 ## stdlib
 from pathlib import Path
+from typing import Any
 
 ## third-party
 import h5py
@@ -18,7 +19,7 @@ import numpy
 
 def read_grid_properties(
     file_path: str | Path,
-) -> dict:
+) -> dict[str, Any]:
     """
     Read block and cell structure metadata from a FLASH HDF5 output file.
 
@@ -30,9 +31,9 @@ def read_grid_properties(
         raise FileNotFoundError(f"No FLASH file found: {file_path}")
 
     def _extract_properties(
-        _h5file,
-        dataset_name,
-    ):
+        _h5file: Any,
+        dataset_name: str,
+    ) -> dict[str, Any]:
         return {str(key).split("'")[1].strip(): value for key, value in _h5file[dataset_name]}
 
     ## check that the file is the right type and has the right structure before proceeding
@@ -119,7 +120,7 @@ def _reformat_flash_sfield(
 def read_flash_field(
     file_path: str | Path,
     dataset_name: str,
-    grid_properties: dict | None = None,
+    grid_properties: dict[str, Any] | None = None,
 ) -> numpy.ndarray:
     """
     Load a named field from a FLASH HDF5 output file as a sorted ndarray.

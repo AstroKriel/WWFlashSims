@@ -122,8 +122,14 @@ def read_vi_data(
     if len(times) == 0:
         raise ValueError(f"No valid data extracted from: {file_path}")
     end_time = end_time if (end_time is not None) else times[-1]
-    start_idx = ww_lists.get_index_of_closest_value(times, start_time)
-    end_idx = ww_lists.get_index_of_closest_value(times, end_time)
+    start_idx = ww_lists.get_index_of_closest_value(
+        values=times,
+        target=start_time,
+    )
+    end_idx = ww_lists.get_index_of_closest_value(
+        values=times,
+        target=end_time,
+    )
     if start_idx == end_idx:
         end_idx = min(end_idx + 1, len(times))
     return VIData(
