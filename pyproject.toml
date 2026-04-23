@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [tool.uv.sources]
-jormi = { git = "https://github.com/AstroKriel/PythonHelpers.git", rev = "d98f8fbfe6e43703d608749f6fd477103a698c4c" }
+jormi = { git = "https://github.com/AstroKriel/PythonHelpers.git", rev = "9e6950b85b8fc1643bae7c8efc04ed1fb28f2a4a" }
 
 [build-system]
 requires = ["hatchling"]
