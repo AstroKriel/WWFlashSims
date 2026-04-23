@@ -231,7 +231,7 @@ wheels = [
 [[package]]
 name = "jormi"
 version = "0.1.0"
-source = { editable = "../jormi" }
+source = { git = "https://github.com/AstroKriel/PythonHelpers.git?rev=ad037ca666d63aa47dc8b7c6e41dbebf5a676b01#ad037ca666d63aa47dc8b7c6e41dbebf5a676b01" }
 dependencies = [
     { name = "cmasher" },
     { name = "h5py" },
@@ -244,23 +244,6 @@ dependencies = [
     { name = "scipy" },
     { name = "tqdm" },
 ]
-
-[package.metadata]
-requires-dist = [
-    { name = "cmasher", specifier = ">=1.9.2" },
-    { name = "h5py", specifier = ">=3.13.0" },
-    { name = "matplotlib", specifier = ">=3.10.1" },
-    { name = "memory-profiler", specifier = ">=0.61.0" },
-    { name = "numpy", specifier = ">=2.2.4" },
-    { name = "pebble", specifier = ">=5.1.1" },
-    { name = "psutil", specifier = ">=7.0.0" },
-    { name = "rich", specifier = ">=14.1.0" },
-    { name = "scipy", specifier = ">=1.15.2" },
-    { name = "tqdm", specifier = ">=4.67.1" },
-]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.0.2" }]
 
 [[package]]
 name = "kiwisolver"
@@ -825,6 +808,6 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "h5py" },
-    { name = "jormi", editable = "../jormi" },
+    { name = "jormi", git = "https://github.com/AstroKriel/PythonHelpers.git?rev=ad037ca666d63aa47dc8b7c6e41dbebf5a676b01" },
     { name = "numpy" },
 ]
