@@ -7,11 +7,13 @@
 ## stdlib
 import argparse
 from collections.abc import Callable
+from typing import Any
 from dataclasses import dataclass
 from pathlib import Path
 
 ## third-party
 import numpy
+from matplotlib.axes import Axes as mpl_Axes
 
 ## personal
 from jormi.ww_fields import cartesian_axes
@@ -174,7 +176,7 @@ def get_field_comps(
 
 def plot_slice(
     *,
-    ax,
+    ax: mpl_Axes,
     field_slice: SlicedField,
     label: str,
     cmap_name: str,
@@ -200,17 +202,17 @@ def plot_slice(
         x_alignment="center",
         y_alignment="top",
         label=f"min = {min_value:.2e}\nmax = {max_value:.2e}",
-        text_size=12,
+        text_size=14,
         box_alpha=0.5,
     )
     annotate_axis.add_text(
         ax=ax,
-        x_pos=0.03,
+        x_pos=0.5,
         y_pos=0.05,
-        x_alignment="left",
+        x_alignment="center",
         y_alignment="bottom",
         label=field_slice.label,
-        text_size=12,
+        text_size=14,
         box_alpha=0.5,
     )
 
@@ -219,7 +221,7 @@ def render_snapshot(
     *,
     snapshot_path: Path,
     field_name: str,
-    field_loader: Callable,
+    field_loader: Callable[..., Any],
     comps_to_plot: tuple[cartesian_axes.CartesianAxis_3D, ...],
     axes_to_slice: tuple[cartesian_axes.CartesianAxis_3D, ...],
     cmap_name: str,

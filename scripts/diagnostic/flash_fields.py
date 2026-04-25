@@ -7,6 +7,7 @@
 ## stdlib
 import argparse
 from collections.abc import Callable
+from typing import Any, TypedDict
 from pathlib import Path
 
 ## personal
@@ -28,17 +29,22 @@ DIVERGING_CMAP = "cmr.iceburn"
 ##
 
 
+class FieldEntry(TypedDict):
+    loader: Callable[..., Any]
+    cmap: str
+
+
 def _field_entry(
-    loader: Callable,
+    loader: Callable[..., Any],
     cmap: str,
-) -> dict:
+) -> FieldEntry:
     return {
         "loader": loader,
         "cmap": cmap,
     }
 
 
-FLASH_FIELD_LOOKUP = {
+FLASH_FIELD_LOOKUP: dict[str, FieldEntry] = {
     "mag":
     _field_entry(
         loader=FlashSnapshot.load_3d_magnetic_vfield,

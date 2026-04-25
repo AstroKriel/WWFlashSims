@@ -28,8 +28,8 @@ sources = ["src"]
 packages = ["src/ww_flash_sims"]
 
 [tool.pyright]
-include = ["src"]
-extraPaths = ["src"]
+include = ["src", "scripts"]
+extraPaths = ["src", "scripts/diagnostic"]
 
 ## --- rules to enforce
 reportMissingImports = true
@@ -49,3 +49,5 @@ reportUninitializedInstanceVariable = "none"  # false positive: pyright misses v
 enableTypeIgnoreComments = true  # honour "# type: ignore" (basedpyright defaults to false)
 reportIgnoreCommentWithoutRule = "none"  # test files use bare "# type: ignore" intentionally
 reportUnnecessaryTypeIgnoreComment = "none"  # suppress warnings about stale ignore comments
+reportUnnecessaryIsInstance = "none"  # diagnostic scripts use isinstance guards for runtime safety beyond what annotations enforce
+reportUnreachable = "none"  # paired with the above: guards after exhaustive isinstance chains appear unreachable to pyright
