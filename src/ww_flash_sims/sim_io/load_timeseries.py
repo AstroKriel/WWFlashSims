@@ -14,6 +14,9 @@ import numpy
 ## personal
 from jormi import ww_lists
 
+## local
+from ww_flash_sims.sim_io import _read_timeseries_data
+
 ##
 ## === CLASSES
 ##
@@ -100,19 +103,19 @@ def read_vi_data(
     file_path = Path(directory) / file_name
     if not file_path.is_file():
         raise FileNotFoundError(f"No .dat file found: {file_path}")
-    file_lines = _read_file_lines(file_path)
+    file_lines = _read_timeseries_data.read_file_lines(file_path)
     header_names = file_lines[0].split()
     num_datasets = len(header_names)
     if print_header:
-        _print_header(file_path, header_names)
+        _read_timeseries_data.print_header(file_path, header_names)
         raise ValueError("print_header mode does not return data.")
-    dataset_index = _resolve_dataset_index(
+    dataset_index = _read_timeseries_data.resolve_dataset_index(
         file_path=file_path,
         dataset_index=dataset_index,
         dataset_name=dataset_name,
         header_names=header_names,
     )
-    time_values, data_values = _extract_data(
+    time_values, data_values = _read_timeseries_data.extract_data(
         lines=file_lines[1:],
         num_datasets=num_datasets,
         dataset_index=dataset_index,
@@ -139,88 +142,14 @@ def read_vi_data(
         file_path=file_path,
     )
 
+##
+## === PUBLIC API
+##
 
-def _read_file_lines(
-    file_path: str | Path,
-) -> list[str]:
-    with open(file_path, "r") as file_pointer:
-        return file_pointer.readlines()
-
-
-def _print_header(
-    file_path: str | Path,
-    header_names: list[str],
-) -> None:
-    print(f"Available datasets in: {file_path}")
-    for dataset_index, dataset_name in enumerate(header_names):
-        print(f"\tindex: {dataset_index:2d} - name: {dataset_name}")
-
-
-def _resolve_dataset_index(
-    file_path: str | Path,
-    dataset_index: int | None,
-    dataset_name: str | None,
-    header_names: list[str],
-) -> int:
-    if dataset_index is not None:
-        return dataset_index
-    if dataset_name is None:
-        raise ValueError(
-            "You need to either provide `dataset_index` or `dataset_name`.",
-        )
-    lookup_dataset_index = {
-        "kin": 9,
-        "mag": 11,
-        "mach": 13,
-    }
-    dataset_name = dataset_name.lower()
-    if dataset_name not in lookup_dataset_index:
-        _print_header(file_path, header_names)
-        raise ValueError(
-            f"`{dataset_name}` is an invalid dataset. "
-            f"Choose from: {ww_lists.as_string(list(lookup_dataset_index.keys()))}, or provide `dataset_index` directly.",
-        )
-    return lookup_dataset_index[dataset_name]
-
-
-def _extract_data(
-    lines: list[str],
-    num_datasets: int,
-    dataset_index: int,
-    time_norm: float,
-    raise_error: bool,
-) -> tuple[list[float], list[float]]:
-    ## iterates in reverse: when a simulation was restarted, only the most recent run's data is used
-    time_index = 0
-    prev_time = numpy.inf
-    time_values, data_values = [], []
-    for line in reversed(lines):
-        line_content = line.strip().split()
-        if len(line_content) != num_datasets:
-            continue
-        ## skip comment lines
-        if "#" in line_content[time_index] or "#" in line_content[dataset_index]:
-            continue
-        try:
-            time_value = float(line_content[time_index]) / time_norm
-            data_value = float(line_content[dataset_index])
-        except ValueError:
-            continue
-        ## discard entries from earlier runs (time has rewound past the current front)
-        if time_value < prev_time:
-            if data_value == 0.0 and time_value > 0:
-                message = f"field[{dataset_index}] = 0.0 at time = {time_value:.3f}"
-                if raise_error:
-                    raise ValueError(f"Error: {message}")
-                print(f"Warning: {message}")
-                continue
-            time_values.append(time_value)
-            data_values.append(data_value)
-            prev_time = time_value
-    return (
-        list(reversed(time_values)),
-        list(reversed(data_values)),
-    )
+__all__ = [
+    "VIData",
+    "read_vi_data",
+]
 
 
 ## } MODULE

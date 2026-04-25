@@ -15,7 +15,8 @@ import numpy
 from jormi.ww_fields.fields_3d import domain_types, field_types
 
 ## local
-from ww_flash_sims.sim_io import _read_grid_data
+from ww_flash_sims.sim_io import _read_snapshot_fields
+from ww_flash_sims.sim_io import _read_snapshot_metadata
 
 ##
 ## === SNAPSHOT CLASS
@@ -41,7 +42,7 @@ class FlashSnapshot:
         self,
     ) -> dict[str, Any]:
         if self._grid_properties is None:
-            self._grid_properties = _read_grid_data.read_grid_properties(
+            self._grid_properties = _read_snapshot_metadata.read_grid_properties(
                 file_path=self.snapshot_path
             )
             if not self._grid_properties:
@@ -54,7 +55,7 @@ class FlashSnapshot:
         self,
     ) -> domain_types.UniformDomain_3D:
         if self._udomain is None:
-            self._udomain = _read_grid_data.read_uniform_domain(
+            self._udomain = _read_snapshot_metadata.read_uniform_domain(
                 self._get_grid_properties()
             )
         return self._udomain
@@ -66,7 +67,7 @@ class FlashSnapshot:
         expected_num_components: int,
     ) -> numpy.ndarray:
         grid_properties = self._get_grid_properties()
-        array = _read_grid_data.read_flash_field(
+        array = _read_snapshot_fields.read_flash_field(
             self.snapshot_path,
             dataset_name,
             grid_properties=grid_properties,
