@@ -20,7 +20,8 @@ from jormi.ww_fields import cartesian_axes
 from jormi.ww_fields.fields_3d import domain_types, field_types
 from jormi.ww_io import manage_io, manage_log
 from jormi.ww_plots import add_color, annotate_axis, manage_plots, plot_data
-from jormi.ww_types import check_positions, check_types
+from jormi.ww_checks import check_python_types
+from jormi.ww_types import box_positions
 
 ## local
 from ww_flash_sims.sim_io.load_snapshot import FlashSnapshot
@@ -81,7 +82,7 @@ def _parse_axes(
     if axes is None:
         return tuple(cartesian_axes.DEFAULT_3D_AXES_ORDER)
     parsed_axes: list[cartesian_axes.CartesianAxis_3D] = []
-    for axis_name in check_types.as_tuple(param=axes):
+    for axis_name in check_python_types.as_tuple(param=axes):
         try:
             parsed_axes.append(cartesian_axes.as_axis(axis=axis_name))
         except (TypeError, ValueError):
@@ -193,14 +194,14 @@ def plot_slice(
         palette_config=add_color.SequentialConfig(palette_name=cmap_name),
         add_cbar=True,
         cbar_label=label,
-        cbar_side=check_positions.Positions.Side.Right,
+        cbar_side=box_positions.Positions.Side.Right,
     )
     annotate_axis.add_text(
         ax=ax,
         x_pos=0.5,
         y_pos=0.95,
-        x_alignment=check_positions.MPLPositions.Align.Center.Center,
-        y_alignment=check_positions.MPLPositions.Align.Side.Top,
+        x_alignment=box_positions.MPLPositions.Align.Center.Center,
+        y_alignment=box_positions.MPLPositions.Align.Side.Top,
         label=f"min = {min_value:.2e}\nmax = {max_value:.2e}",
         text_size=14,
         box_alpha=0.5,
@@ -209,8 +210,8 @@ def plot_slice(
         ax=ax,
         x_pos=0.5,
         y_pos=0.05,
-        x_alignment=check_positions.MPLPositions.Align.Center.Center,
-        y_alignment=check_positions.MPLPositions.Align.Side.Bottom,
+        x_alignment=box_positions.MPLPositions.Align.Center.Center,
+        y_alignment=box_positions.MPLPositions.Align.Side.Bottom,
         label=field_slice.label,
         text_size=14,
         box_alpha=0.5,
