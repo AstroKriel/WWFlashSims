@@ -13,7 +13,7 @@ import h5py
 import numpy
 
 ## personal (local)
-from jormi.ww_fields.fields_3d import domain_types
+from jormi.ww_fields.fields_3d import domain_models
 
 ##
 ## === FUNCTIONS
@@ -104,12 +104,12 @@ def read_grid_properties(
 
 def read_uniform_domain(
     grid_properties: dict[str, Any],
-) -> domain_types.UniformDomain_3D:
+) -> domain_models.UniformDomain_3D:
     """Construct a UniformDomain_3D from grid properties."""
     num_cells_x = grid_properties["num_blocks_x"] * grid_properties["num_cells_per_block_x"]
     num_cells_y = grid_properties["num_blocks_y"] * grid_properties["num_cells_per_block_y"]
     num_cells_z = grid_properties["num_blocks_z"] * grid_properties["num_cells_per_block_z"]
-    return domain_types.UniformDomain_3D(
+    return domain_models.UniformDomain_3D(
         periodicity=(True, True, True),
         resolution=(num_cells_x, num_cells_y, num_cells_z),
         domain_bounds=grid_properties["domain_bounds"],

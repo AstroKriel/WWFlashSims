@@ -17,10 +17,10 @@ from matplotlib.axes import Axes as mpl_Axes
 
 ## personal
 from jormi.ww_fields import cartesian_axes
-from jormi.ww_fields.fields_3d import domain_types, field_types
+from jormi.ww_fields.fields_3d import domain_models, field_models
 from jormi.ww_io import manage_io, manage_log
 from jormi.ww_plots import add_color, annotate_axis, manage_plots, plot_data
-from jormi.ww_checks import check_python_types
+from jormi.ww_validation import validate_types
 from jormi.ww_types import box_positions
 
 ## local
@@ -82,7 +82,7 @@ def _parse_axes(
     if axes is None:
         return tuple(cartesian_axes.DEFAULT_3D_AXES_ORDER)
     parsed_axes: list[cartesian_axes.CartesianAxis_3D] = []
-    for axis_name in check_python_types.as_tuple(param=axes):
+    for axis_name in validate_types.as_tuple(param=axes):
         try:
             parsed_axes.append(cartesian_axes.as_axis(axis=axis_name))
         except (TypeError, ValueError):
@@ -92,7 +92,7 @@ def _parse_axes(
 
 def get_slice_bounds(
     *,
-    uniform_domain: domain_types.UniformDomain_3D,
+    uniform_domain: domain_models.UniformDomain_3D,
     axis_to_slice: cartesian_axes.CartesianAxis_3D,
 ) -> AxisBounds:
     (x0_min, x0_max), (x1_min, x1_max), (x2_min, x2_max) = uniform_domain.domain_bounds
@@ -117,7 +117,7 @@ def slice_field(
     *,
     data_3d: numpy.ndarray,
     axis_to_slice: cartesian_axes.CartesianAxis_3D,
-    uniform_domain: domain_types.UniformDomain_3D,
+    uniform_domain: domain_models.UniformDomain_3D,
 ) -> SlicedField:
     num_cells_x0, num_cells_x1, num_cells_x2 = data_3d.shape
     if axis_to_slice == cartesian_axes.CartesianAxis_3D.X2:
@@ -143,27 +143,27 @@ def slice_field(
 
 def get_field_comps(
     *,
-    field: field_types.ScalarField_3D | field_types.VectorField_3D,
+    field: field_models.ScalarField_3D | field_models.VectorField_3D,
     field_name: str,
     comps_to_plot: tuple[cartesian_axes.CartesianAxis_3D, ...],
 ) -> list[FieldComp]:
-    if isinstance(field, field_types.ScalarField_3D):
+    if isinstance(field, field_models.ScalarField_3D):
         return [
             FieldComp(
-                data_3d=field_types.extract_3d_sarray(field),
-                label=field_types.get_label(field),
+                data_3d=field_models.extract_3d_sarray(field),
+                label=field_models.get_label(field),
             ),
         ]
-    if isinstance(field, field_types.VectorField_3D):
+    if isinstance(field, field_models.VectorField_3D):
         if not comps_to_plot:
             raise ValueError(
                 f"vector field `{field_name}` requires at least one component; none provided via -c.",
             )
-        varray_3d = field_types.extract_3d_varray(field)
+        varray_3d = field_models.extract_3d_varray(field)
         return [
             FieldComp(
                 data_3d=varray_3d[cartesian_axes.get_axis_index(comp_axis)],
-                label=field_types.get_vcomp_label(field, comp_axis),
+                label=field_models.get_vcomp_label(field, comp_axis),
             )
             for comp_axis in comps_to_plot
         ]

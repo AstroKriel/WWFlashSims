@@ -12,7 +12,7 @@ from typing import Any
 import numpy
 
 ## personal
-from jormi.ww_fields.fields_3d import domain_types, field_types
+from jormi.ww_fields.fields_3d import domain_models, field_models
 
 ## local
 from ww_flash_sims.sim_io import _read_snapshot_fields
@@ -32,7 +32,7 @@ class FlashSnapshot:
     ) -> None:
         self.snapshot_path: Path = Path(snap_path)
         self._grid_properties: dict[str, Any] | None = None
-        self._udomain: domain_types.UniformDomain_3D | None = None
+        self._udomain: domain_models.UniformDomain_3D | None = None
 
     ##
     ## --- INFRASTRUCTURE
@@ -53,7 +53,7 @@ class FlashSnapshot:
 
     def _get_udomain(
         self,
-    ) -> domain_types.UniformDomain_3D:
+    ) -> domain_models.UniformDomain_3D:
         if self._udomain is None:
             self._udomain = _read_snapshot_metadata.read_uniform_domain(
                 self._get_grid_properties()
@@ -91,13 +91,13 @@ class FlashSnapshot:
 
     def load_3d_magnetic_vfield(
         self,
-    ) -> field_types.VectorField_3D:
+    ) -> field_models.VectorField_3D:
         """Load magnetic field: vec(b)."""
         varray_3d = self._load_field(
             dataset_name="mag",
             expected_num_components=3,
         )
-        return field_types.VectorField_3D.from_3d_varray(
+        return field_models.VectorField_3D.from_3d_varray(
             varray_3d=varray_3d,
             udomain_3d=self._get_udomain(),
             field_label=r"\vec{b}",
@@ -105,13 +105,13 @@ class FlashSnapshot:
 
     def load_3d_velocity_vfield(
         self,
-    ) -> field_types.VectorField_3D:
+    ) -> field_models.VectorField_3D:
         """Load velocity field: vec(v)."""
         varray_3d = self._load_field(
             dataset_name="vel",
             expected_num_components=3,
         )
-        return field_types.VectorField_3D.from_3d_varray(
+        return field_models.VectorField_3D.from_3d_varray(
             varray_3d=varray_3d,
             udomain_3d=self._get_udomain(),
             field_label=r"\vec{v}",
@@ -119,13 +119,13 @@ class FlashSnapshot:
 
     def load_3d_density_sfield(
         self,
-    ) -> field_types.ScalarField_3D:
+    ) -> field_models.ScalarField_3D:
         """Load gas density: rho."""
         sarray_3d = self._load_field(
             dataset_name="dens",
             expected_num_components=1,
         )
-        return field_types.ScalarField_3D.from_3d_sarray(
+        return field_models.ScalarField_3D.from_3d_sarray(
             sarray_3d=sarray_3d,
             udomain_3d=self._get_udomain(),
             field_label=r"\rho",
