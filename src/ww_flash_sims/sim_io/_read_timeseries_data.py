@@ -17,7 +17,10 @@ from jormi import ww_lists
 def read_file_lines(
     file_path: str | Path,
 ) -> list[str]:
-    with open(file_path, "r") as file_pointer:
+    with open(
+            file=file_path,
+            mode="r",
+    ) as file_pointer:
         return file_pointer.readlines()
 
 
