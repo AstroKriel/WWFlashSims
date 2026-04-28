@@ -50,9 +50,10 @@ def resolve_dataset_index(
     dataset_name = dataset_name.lower()
     if dataset_name not in lookup_dataset_index:
         print_header(file_path, header_names)
+        keys_string = ww_lists.as_string(elems=list(lookup_dataset_index.keys()))
         raise ValueError(
             f"`{dataset_name}` is an invalid dataset. "
-            f"Choose from: {ww_lists.as_string(list(lookup_dataset_index.keys()))}, or provide `dataset_index` directly.",
+            f"Choose from: {keys_string}, or provide `dataset_index` directly.",
         )
     return lookup_dataset_index[dataset_name]
 

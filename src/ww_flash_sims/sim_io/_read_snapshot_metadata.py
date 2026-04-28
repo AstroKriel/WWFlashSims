@@ -79,12 +79,42 @@ def read_grid_properties(
         num_cells_per_block = num_cells_per_block_x * num_cells_per_block_y * num_cells_per_block_z
         num_cells = num_blocks * num_cells_per_block
         real_props = properties["real_properties"]
-        x_min = float(real_props.get("xmin", -0.5))
-        x_max = float(real_props.get("xmax", 0.5))
-        y_min = float(real_props.get("ymin", -0.5))
-        y_max = float(real_props.get("ymax", 0.5))
-        z_min = float(real_props.get("zmin", -0.5))
-        z_max = float(real_props.get("zmax", 0.5))
+        x_min = float(
+            real_props.get(
+                "xmin",
+                -0.5,
+            ),
+        )
+        x_max = float(
+            real_props.get(
+                "xmax",
+                0.5,
+            ),
+        )
+        y_min = float(
+            real_props.get(
+                "ymin",
+                -0.5,
+            ),
+        )
+        y_max = float(
+            real_props.get(
+                "ymax",
+                0.5,
+            ),
+        )
+        z_min = float(
+            real_props.get(
+                "zmin",
+                -0.5,
+            ),
+        )
+        z_max = float(
+            real_props.get(
+                "zmax",
+                0.5,
+            ),
+        )
         return {
             "output_num": output_num,
             "dataset_names": dataset_names,
@@ -101,6 +131,7 @@ def read_grid_properties(
     except KeyError as missing_key:
         print(f"Missing key `{missing_key}` in the extracted properties from: {file_path}")
         return {}
+
 
 def read_uniform_domain(
     grid_properties: dict[str, Any],

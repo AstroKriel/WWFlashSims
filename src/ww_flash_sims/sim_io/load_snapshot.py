@@ -43,11 +43,11 @@ class FlashSnapshot:
     ) -> dict[str, Any]:
         if self._grid_properties is None:
             self._grid_properties = _read_snapshot_metadata.read_grid_properties(
-                file_path=self.snapshot_path
+                file_path=self.snapshot_path,
             )
             if not self._grid_properties:
                 raise ValueError(
-                    f"FLASH grid properties could not be read from: {self.snapshot_path}"
+                    f"FLASH grid properties could not be read from: {self.snapshot_path}",
                 )
         return self._grid_properties
 
@@ -56,7 +56,7 @@ class FlashSnapshot:
     ) -> domain_models.UniformDomain_3D:
         if self._udomain is None:
             self._udomain = _read_snapshot_metadata.read_uniform_domain(
-                self._get_grid_properties()
+                self._get_grid_properties(),
             )
         return self._udomain
 

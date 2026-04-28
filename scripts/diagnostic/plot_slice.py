@@ -84,9 +84,13 @@ def _parse_axes(
     parsed_axes: list[cartesian_axes.CartesianAxis_3D] = []
     for axis_name in validate_types.as_tuple(param=axes):
         try:
-            parsed_axes.append(cartesian_axes.as_axis(axis=axis_name))
+            parsed_axes.append(
+                cartesian_axes.as_axis(axis=axis_name),
+            )
         except (TypeError, ValueError):
-            raise ValueError(f"invalid axis: `{axis_name}`; choose from: {list(cartesian_axes.VALID_3D_AXIS_LABELS)}.")
+            raise ValueError(
+                f"invalid axis: `{axis_name}`; choose from: {list(cartesian_axes.VALID_3D_AXIS_LABELS)}.",
+            )
     return tuple(parsed_axes)
 
 
@@ -108,8 +112,10 @@ def get_slice_labels(
 ) -> tuple[str, str]:
     axes_in_plane = [ax for ax in cartesian_axes.DEFAULT_3D_AXES_ORDER if ax != axis_to_slice]
     return (
-        axes_in_plane[0].axis_label if "$" in axes_in_plane[0].axis_label else f"${axes_in_plane[0].axis_label}$",
-        axes_in_plane[1].axis_label if "$" in axes_in_plane[1].axis_label else f"${axes_in_plane[1].axis_label}$",
+        axes_in_plane[0].axis_label
+        if "$" in axes_in_plane[0].axis_label else f"${axes_in_plane[0].axis_label}$",
+        axes_in_plane[1].axis_label
+        if "$" in axes_in_plane[1].axis_label else f"${axes_in_plane[1].axis_label}$",
     )
 
 
@@ -163,9 +169,8 @@ def get_field_comps(
         return [
             FieldComp(
                 data_3d=varray_3d[cartesian_axes.get_axis_index(comp_axis)],
-                label=field_models.get_vcomp_label(field, comp_axis),
-            )
-            for comp_axis in comps_to_plot
+                label=field_models.get_vcomp_label(field, comp_axis=comp_axis),
+            ) for comp_axis in comps_to_plot
         ]
     raise ValueError(f"unrecognised field type for `{field_name}`.")
 
@@ -290,7 +295,10 @@ def main() -> None:
     axes_to_slice = _parse_axes(axes=user_args.axes)
     if not sim_dir.is_dir():
         raise FileNotFoundError(f"simulation directory not found: {sim_dir}.")
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
     snapshot_paths = collect_snapshot_paths(sim_dir)
     if not snapshot_paths:
         manage_log.log_hint(text=f"no snapshots found under {sim_dir}.")

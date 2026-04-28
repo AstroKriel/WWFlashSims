@@ -45,18 +45,15 @@ def _field_entry(
 
 
 FLASH_FIELD_LOOKUP: dict[str, FieldEntry] = {
-    "mag":
-    _field_entry(
+    "mag": _field_entry(
         loader=FlashSnapshot.load_3d_magnetic_vfield,
         cmap=SEQUENTIAL_CMAP,
     ),
-    "vel":
-    _field_entry(
+    "vel": _field_entry(
         loader=FlashSnapshot.load_3d_velocity_vfield,
         cmap=SEQUENTIAL_CMAP,
     ),
-    "rho":
-    _field_entry(
+    "rho": _field_entry(
         loader=FlashSnapshot.load_3d_density_sfield,
         cmap=SEQUENTIAL_CMAP,
     ),
@@ -70,7 +67,9 @@ FLASH_FIELD_LOOKUP: dict[str, FieldEntry] = {
 def validate_fields(
     field_names: list[str] | tuple[str, ...] | None,
 ) -> None:
-    valid_field_names = set(FLASH_FIELD_LOOKUP.keys())
+    valid_field_names = set(
+        FLASH_FIELD_LOOKUP.keys(),
+    )
     if not field_names or not set(field_names).issubset(valid_field_names):
         raise ValueError(f"provide fields via -f from: {sorted(valid_field_names)}.")
 
@@ -93,8 +92,14 @@ def base_parser(
     - `allow_vfields`:
         If `True`, adds `--comps/-c` and `--axes/-a` for vector field components and slice axes.
     """
-    field_list = ww_lists.as_string(elems=sorted(FLASH_FIELD_LOOKUP.keys()))
-    axis_list = ww_lists.as_string(elems=list(cartesian_axes.VALID_3D_AXIS_LABELS))
+    field_list = ww_lists.as_string(
+        elems=sorted(
+            FLASH_FIELD_LOOKUP.keys(),
+        ),
+    )
+    axis_list = ww_lists.as_string(
+        elems=list(cartesian_axes.VALID_3D_AXIS_LABELS),
+    )
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument(
         "--sim-dir",

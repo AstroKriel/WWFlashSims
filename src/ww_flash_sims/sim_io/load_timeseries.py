@@ -142,6 +142,7 @@ def read_vi_data(
         file_path=file_path,
     )
 
+
 ##
 ## === PUBLIC API
 ##
@@ -150,6 +151,5 @@ __all__ = [
     "VIData",
     "read_vi_data",
 ]
-
 
 ## } MODULE
