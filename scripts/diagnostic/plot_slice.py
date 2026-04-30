@@ -1,4 +1,4 @@
-""" """  ## { SCRIPT
+## { SCRIPT
 
 ##
 ## === DEPENDENCIES
