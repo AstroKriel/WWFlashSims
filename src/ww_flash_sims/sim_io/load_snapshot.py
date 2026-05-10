@@ -28,9 +28,10 @@ class FlashSnapshot:
 
     def __init__(
         self,
-        snap_path: str | Path,
+        *,
+        snapshot_path: str | Path,
     ) -> None:
-        self.snapshot_path: Path = Path(snap_path)
+        self.snapshot_path: Path = Path(snapshot_path)
         self._grid_properties: dict[str, Any] | None = None
         self._udomain: domain_models.UniformDomain_3D | None = None
 
