@@ -27,7 +27,10 @@ sources = ["src"]
 ## explicit because distribution name (ww-flash-sims) differs from folder name (ww_flash_sims)
 packages = ["src/ww_flash_sims"]
 
-[tool.pyright]
+[dependency-groups]
+dev = ["basedpyright>=1.0"]
+
+[tool.basedpyright]
 include = ["src"]
 extraPaths = ["src"]
 
