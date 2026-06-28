@@ -94,12 +94,12 @@ class FlashSnapshot:
         self,
     ) -> field_models.VectorField_3D:
         """Load magnetic field: vec(b)."""
-        varray_3d = self._load_field(
+        magnetic_varray_3d = self._load_field(
             dataset_name="mag",
             expected_num_components=3,
         )
         return field_models.VectorField_3D.from_3d_varray(
-            varray_3d=varray_3d,
+            varray_3d=magnetic_varray_3d,
             udomain_3d=self._get_udomain(),
             field_label=r"\vec{b}",
         )
@@ -108,12 +108,12 @@ class FlashSnapshot:
         self,
     ) -> field_models.VectorField_3D:
         """Load velocity field: vec(v)."""
-        varray_3d = self._load_field(
+        velocity_varray_3d = self._load_field(
             dataset_name="vel",
             expected_num_components=3,
         )
         return field_models.VectorField_3D.from_3d_varray(
-            varray_3d=varray_3d,
+            varray_3d=velocity_varray_3d,
             udomain_3d=self._get_udomain(),
             field_label=r"\vec{v}",
         )
@@ -122,12 +122,12 @@ class FlashSnapshot:
         self,
     ) -> field_models.ScalarField_3D:
         """Load gas density: rho."""
-        sarray_3d = self._load_field(
+        density_sarray_3d = self._load_field(
             dataset_name="dens",
             expected_num_components=1,
         )
         return field_models.ScalarField_3D.from_3d_sarray(
-            sarray_3d=sarray_3d,
+            sarray_3d=density_sarray_3d,
             udomain_3d=self._get_udomain(),
             field_label=r"\rho",
         )
